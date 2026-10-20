@@ -2220,7 +2220,7 @@ describe('Palette', () => {
 
 `packages/app/src/renderer/App.test.tsx` (replace the Task 1 test):
 ```tsx
-import { act, screen, waitFor } from '@testing-library/react';
+import { act, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import { ApiError } from './api/client';
@@ -2255,8 +2255,9 @@ describe('App start-up and login', () => {
     const user = userEvent.setup();
     const { bridge } = renderApp();
     await signIn(user);
-    expect(await screen.findByText('Test Textiles')).toBeInTheDocument();
-    expect(screen.getByText('2026-27')).toBeInTheDocument(); // the open year is chosen
+    const bar = within(await screen.findByRole('banner'));
+    expect(bar.getByText('Test Textiles')).toBeInTheDocument();
+    expect(bar.getByText('2026-27')).toBeInTheDocument(); // the open year is chosen
     await waitFor(() => expect(bridge.config.lastCompanyId).toBe('c1'));
     expect(bridge.config.lastYearId).toBe('y1');
   });
@@ -2265,7 +2266,7 @@ describe('App start-up and login', () => {
     const user = userEvent.setup();
     renderApp({ bridge: createFakeBridge({ lastCompanyId: 'c1', lastYearId: 'y0' }) });
     await signIn(user);
-    expect(await screen.findByText('2025-26')).toBeInTheDocument();
+    expect(within(await screen.findByRole('banner')).getByText('2025-26')).toBeInTheDocument();
   });
 
   it('offers to fix the server address when the server cannot be reached', async () => {
@@ -2297,7 +2298,7 @@ describe('App start-up and login', () => {
     const user = userEvent.setup();
     const { api } = renderApp();
     await signIn(user);
-    await screen.findByText('Test Textiles');
+    await screen.findByRole('banner');
     act(() => api.onUnauthorized?.());
     expect(await screen.findByRole('button', { name: 'Sign in' })).toBeInTheDocument();
     expect(screen.getByText(/session has ended/i)).toBeInTheDocument();
@@ -2408,7 +2409,7 @@ describe('Shell keyboard', () => {
     const year = await screen.findByLabelText('Financial year');
     await user.selectOptions(year, 'y0');
     await user.keyboard('{Escape}');
-    expect(await screen.findByText('2025-26')).toBeInTheDocument();
+    expect(within(await screen.findByRole('banner')).getByText('2025-26')).toBeInTheDocument();
   });
 });
 
@@ -10660,7 +10661,7 @@ describe('the desktop app against the real service', () => {
     const user = userEvent.setup();
     renderApp({ api: realClient(server.url), bridge: bridge() });
     await signIn(user, 'admin', server.adminPassword);
-    await screen.findByText('Test Textiles');
+    await screen.findByRole('banner');
 
     // Receipt: F4, date, account, amount
     await user.keyboard('{F4}');
@@ -10703,7 +10704,7 @@ describe('the desktop app against the real service', () => {
     const user = userEvent.setup();
     renderApp({ api: realClient(server.url), bridge: bridge() });
     await signIn(user, 'admin', server.adminPassword);
-    await screen.findByText('Test Textiles');
+    await screen.findByRole('banner');
     await user.keyboard('{F6}');
     await screen.findByRole('combobox', { name: 'Book' });
     await user.keyboard('12052026{Enter}{Enter}');
@@ -10740,7 +10741,7 @@ describe('the desktop app against the real service', () => {
     const api = realClient(server.url);
     renderApp({ api, bridge: bridge() });
     await signIn(user, 'admin', server.adminPassword);
-    await screen.findByText('Test Textiles');
+    await screen.findByRole('banner');
     api.setToken('a-token-the-server-does-not-know');
     await user.keyboard('{F7}'); // any call now fails with 401
     expect(await screen.findByRole('button', { name: 'Sign in' })).toBeInTheDocument();
