@@ -40,7 +40,7 @@ npm run demo
 ```
 
 That builds the desktop app, starts the service with an embedded database (no PostgreSQL needed), and opens the app.
-Sign in with **username `admin`, password `admin12345`**. Your data is kept in the `.devdata` folder; delete it to start fresh.
+It runs in **test mode**: there is no sign-in screen, you simply act as the administrator, and a yellow "TEST MODE" notice shows in the top bar. (To try the real sign-in, run `npm run demo -- --login` and use **admin / admin12345**.) Test mode can only be switched on with the embedded development database, never against a real PostgreSQL database, so a real installation always asks for a login. Your data is kept in the `.devdata` folder; delete it to start fresh.
 Press **F1** inside the app to see every keyboard shortcut. A suggested first session: create a company, add a few accounts and a
 cash book, then press **F4** to enter receipts and **F8** for the ledger report.
 

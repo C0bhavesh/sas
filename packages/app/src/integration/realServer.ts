@@ -24,14 +24,14 @@ export interface RunningServer {
 }
 
 /** Start the real service on a free port with a throw-away embedded database. Takes several seconds. */
-export async function startServer(): Promise<RunningServer> {
+export async function startServer(opts: { noLogin?: boolean } = {}): Promise<RunningServer> {
   const dir = await mkdtemp(join(tmpdir(), 'sas-it-'));
   const port = await freePort();
   const adminPassword = 'adminpass1';
   const repo = process.cwd(); // vitest runs from the repository root
   const child = spawn(process.execPath, [join(repo, 'node_modules', 'tsx', 'dist', 'cli.mjs'), join(repo, 'packages', 'service', 'src', 'server', 'main.ts')], {
     cwd: repo,
-    env: { ...process.env, SAS_DEV_PGLITE_DIR: join(dir, 'db'), ADMIN_PASSWORD: adminPassword, PORT: String(port), HOST: '127.0.0.1' },
+    env: { ...process.env, SAS_DEV_PGLITE_DIR: join(dir, 'db'), ADMIN_PASSWORD: adminPassword, PORT: String(port), HOST: '127.0.0.1', SAS_NO_LOGIN: opts.noLogin ? '1' : '0' },
     stdio: ['ignore', 'pipe', 'pipe'],
   });
   let log = '';

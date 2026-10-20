@@ -13,7 +13,7 @@ import type {
   YearLite,
 } from './types';
 
-export const health = (api: ApiClient) => api.request<{ ok: boolean }>('GET', '/api/health');
+export const health = (api: ApiClient) => api.request<{ ok: boolean; loginRequired?: boolean }>('GET', '/api/health');
 
 export const login = (api: ApiClient, username: string, password: string) =>
   api.request<{ token: string; actor: Actor }>('POST', '/api/login', { username, password });

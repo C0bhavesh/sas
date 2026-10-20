@@ -3,6 +3,7 @@ import { createPgDb } from '../db/pg';
 import { migrate } from '../db/migrate';
 import type { Db } from '../db/types';
 import { execRunner, pgConnFromUrl, type BackupConfig } from '../ops/backup';
+import { resolveNoLogin } from './authMode';
 import { bootstrapAdmin } from './bootstrap';
 
 async function openDatabase(): Promise<Db> {
@@ -16,6 +17,13 @@ async function openDatabase(): Promise<Db> {
   process.exit(1);
 }
 
+let noLogin = false;
+try {
+  noLogin = resolveNoLogin(process.env);
+} catch (e) {
+  console.error((e as Error).message);
+  process.exit(1);
+}
 const db = await openDatabase();
 await migrate(db);
 
@@ -34,7 +42,10 @@ if (process.env.BACKUP_DIR && process.env.DATABASE_URL) {
   backup = { conn: pgConnFromUrl(process.env.DATABASE_URL), dir: process.env.BACKUP_DIR, runner: execRunner() };
 }
 
-const app = buildApp({ db, backup, logger: true });
+if (noLogin) {
+  console.warn('*** TEST MODE: sign-in is switched off. Everyone acts as the administrator. Never use this for real data. ***');
+}
+const app = buildApp({ db, backup, logger: true, noLogin });
 const port = Number(process.env.PORT ?? 4100);
 const host = process.env.HOST ?? '127.0.0.1';
 await app.listen({ port, host });

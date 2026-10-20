@@ -1,7 +1,8 @@
 // One command to try the software: builds the desktop app, starts the service with an embedded
 // database, waits until it answers, then opens the app. Closing the app stops the service.
 //
-//   npm run demo            open the app (first run creates the administrator below)
+//   npm run demo            open the app in TEST MODE (no sign-in screen)
+//   npm run demo -- --login open the app with the real sign-in (admin / admin12345)
 //   npm run demo -- --check start everything, confirm the window renders, then exit (used for testing)
 //
 // Data is kept in ./.devdata, so what you enter is still there next time. Delete that folder to start fresh.
@@ -16,6 +17,8 @@ const PORT = process.env.PORT ?? '4100';
 const ADMIN_USER = 'admin';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? 'admin12345';
 const check = process.argv.includes('--check');
+// By default the demo runs in TEST MODE: no sign-in screen. Pass --login to try the real sign-in.
+const testMode = !process.argv.includes('--login');
 const url = `http://127.0.0.1:${PORT}`;
 
 console.log('1/3 Building the desktop app...');
@@ -35,7 +38,7 @@ if (alreadyRunning) {
   service = spawn(process.execPath, [tsx, join(root, 'packages', 'service', 'src', 'server', 'main.ts')], {
     cwd: root,
     stdio: ['ignore', 'pipe', 'pipe'],
-    env: { ...process.env, SAS_DEV_PGLITE_DIR: join(root, '.devdata'), ADMIN_PASSWORD, PORT, HOST: '127.0.0.1' },
+    env: { ...process.env, SAS_DEV_PGLITE_DIR: join(root, '.devdata'), ADMIN_PASSWORD, PORT, HOST: '127.0.0.1', SAS_NO_LOGIN: testMode ? '1' : '0' },
   });
   let log = '';
   service.stdout.on('data', (d) => (log += d));
@@ -57,7 +60,7 @@ if (alreadyRunning) {
 }
 
 console.log('3/3 Opening the app.');
-console.log(`    Sign in with   username: ${ADMIN_USER}   password: ${ADMIN_PASSWORD}   (created on the first run only)`);
+console.log(testMode ? '    TEST MODE: no sign-in screen (you act as the administrator). Use  npm run demo -- --login  to try the real sign-in.' : `    Sign in with   username: ${ADMIN_USER}   password: ${ADMIN_PASSWORD}   (created on the first run only)`);
 console.log(`    Server address: ${url}  (the default; the app asks if it cannot connect)`);
 
 // ELECTRON_RUN_AS_NODE is set by editors such as VS Code; with it set Electron would run as plain Node.

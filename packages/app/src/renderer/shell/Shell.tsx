@@ -50,11 +50,16 @@ export function Shell() {
       <div className="app">
         <header className="topbar">
           <strong>SAS</strong>
+          {session.testMode && (
+            <span role="status" style={{ background: '#f2b01e', color: '#1b1f24', padding: '1px 8px', borderRadius: 3, fontWeight: 700 }}>
+              TEST MODE — sign-in is off
+            </span>
+          )}
           <span>{session.company?.name ?? 'No company'}</span>
           <span>{session.year?.label}</span>
           <span className="spacer" />
           <span>{session.actor.username}</span>
-          <button onClick={session.logout}>Sign out</button>
+          {!session.testMode && <button onClick={session.logout}>Sign out</button>}
         </header>
         <div className="layout">
           <nav className="menu" aria-label="Screens">

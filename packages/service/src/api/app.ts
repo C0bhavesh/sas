@@ -1,7 +1,7 @@
 import Fastify, { type FastifyInstance } from 'fastify';
 import { ZodError } from 'zod';
 import { AppError, AuthError, VoucherError } from '@sas/shared';
-import { authenticate } from '../security/users';
+import { authenticate, firstAdministrator } from '../security/users';
 import { registerAdminRoutes } from './routes/admin';
 import { registerAuthRoutes } from './routes/auth';
 import { registerMasterRoutes } from './routes/masters';
@@ -19,7 +19,8 @@ export function buildApp(deps: AppDeps): FastifyInstance {
     const path = req.url.split('?')[0]!;
     if (PUBLIC_PATHS.has(path)) return;
     const token = bearerToken(req);
-    const actor = token ? await authenticate(deps.db, token) : null;
+    let actor = token ? await authenticate(deps.db, token) : null;
+    if (!actor && deps.noLogin) actor = await firstAdministrator(deps.db);
     if (!actor) throw new AuthError('NOT_AUTHENTICATED', 'Please log in');
     req.actor = actor;
   });

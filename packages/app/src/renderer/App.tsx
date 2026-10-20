@@ -13,7 +13,7 @@ type Phase =
   | { name: 'checking' }
   | { name: 'connect'; error: string }
   | { name: 'login'; notice?: string }
-  | { name: 'ready'; me: MeResponse };
+  | { name: 'ready'; me: MeResponse; testMode?: boolean };
 
 function defaultDeps(): AppDeps {
   return { api: createBridgeClient(window.sas), bridge: window.sas };
@@ -26,7 +26,16 @@ function AppInner() {
   const check = useCallback(async () => {
     setPhase({ name: 'checking' });
     try {
-      await health(api);
+      const h = await health(api);
+      if (h.loginRequired === false) {
+        // The server is in test mode: it signs everyone in as the administrator.
+        try {
+          setPhase({ name: 'ready', me: await me(api), testMode: true });
+          return;
+        } catch {
+          /* no test user to offer: use the normal sign-in screen */
+        }
+      }
       setPhase({ name: 'login' });
     } catch (e) {
       setPhase({ name: 'connect', error: e instanceof ApiError ? e.message : String(e) });
@@ -72,7 +81,7 @@ function AppInner() {
       return <LoginScreen notice={phase.notice} onSubmit={signIn} onChangeServer={() => setPhase({ name: 'connect', error: '' })} />;
     case 'ready':
       return (
-        <SessionProvider me={phase.me} onLogout={() => void signOut()}>
+        <SessionProvider me={phase.me} testMode={phase.testMode} onLogout={() => void signOut()}>
           <LookupsProvider>
             <Shell />
           </LookupsProvider>

@@ -30,7 +30,7 @@ describe('authentication', () => {
   it('health needs no login', async () => {
     const r = await f.app.inject({ method: 'GET', url: '/api/health' });
     expect(r.statusCode).toBe(200);
-    expect(r.json()).toEqual({ ok: true });
+    expect(r.json()).toEqual({ ok: true, loginRequired: true });
   });
 
   it('everything else needs a token', async () => {

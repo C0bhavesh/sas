@@ -17,6 +17,8 @@ export interface SessionValue {
   reloadYears(): Promise<void>;
   can(module: ModuleName, action: RightAction): boolean;
   logout(): void;
+  /** The server has sign-in switched off (testing only). */
+  testMode: boolean;
 }
 
 export const SessionContext = createContext<SessionValue | null>(null);
@@ -36,7 +38,7 @@ export function pickYear(years: YearLite[], preferredId?: string): YearLite | nu
   return [...byStart].reverse().find((y) => y.status === 'open') ?? byStart[byStart.length - 1]!;
 }
 
-export function SessionProvider({ me, onLogout, children }: { me: MeResponse; onLogout: () => void; children: ReactNode }) {
+export function SessionProvider({ me, onLogout, testMode = false, children }: { me: MeResponse; onLogout: () => void; testMode?: boolean; children: ReactNode }) {
   const { api, bridge } = useDeps();
   const [companies, setCompanies] = useState<CompanyLite[]>(me.companies);
   const [company, setCompany] = useState<CompanyLite | null>(null);
@@ -104,8 +106,9 @@ export function SessionProvider({ me, onLogout, children }: { me: MeResponse; on
       },
       can: (module, action) => me.actor.isAdmin || me.rights[module]?.[action] === true,
       logout: onLogout,
+      testMode,
     }),
-    [me, companies, company, year, years, api, bridge, loadCompany, onLogout],
+    [me, companies, company, year, years, api, bridge, loadCompany, onLogout, testMode],
   );
 
   if (!ready) return <p style={{ padding: 16 }}>Loading…</p>;

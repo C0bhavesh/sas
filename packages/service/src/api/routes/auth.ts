@@ -7,7 +7,7 @@ import { bearerToken, type AppDeps } from '../types';
 export function registerAuthRoutes(app: FastifyInstance, deps: AppDeps): void {
   const { db } = deps;
 
-  app.get('/api/health', async () => ({ ok: true }));
+  app.get('/api/health', async () => ({ ok: true, loginRequired: !deps.noLogin }));
 
   app.post('/api/login', async (req) => {
     const b = loginBody.parse(req.body);

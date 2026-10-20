@@ -94,3 +94,47 @@ describe('App start-up and login', () => {
     expect(api.calls.some((c) => c.path === '/api/logout')).toBe(true);
   });
 });
+
+describe('test mode (the server has sign-in switched off)', () => {
+  const testModeRoutes = [{ method: 'GET' as const, path: '/api/health', reply: () => ({ ok: true, loginRequired: false }) }];
+
+  it('opens straight into the app, shows a test-mode notice, and has no sign-out button', async () => {
+    renderApp({ routes: testModeRoutes });
+    const bar = within(await screen.findByRole('banner'));
+    expect(bar.getByText('Test Textiles')).toBeInTheDocument();
+    expect(bar.getByText(/test mode/i)).toBeInTheDocument();
+    expect(bar.queryByRole('button', { name: 'Sign out' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Sign in' })).toBeNull();
+  });
+
+  it('never calls the login endpoint', async () => {
+    const { api } = renderApp({ routes: testModeRoutes });
+    await screen.findByRole('banner');
+    expect(api.calls.some((c) => c.path === '/api/login')).toBe(false);
+  });
+
+  it('falls back to the normal sign-in screen if the server has no test user to offer', async () => {
+    renderApp({
+      routes: [
+        ...testModeRoutes,
+        {
+          method: 'GET',
+          path: '/api/me',
+          reply: () => {
+            throw new ApiError(401, 'NOT_AUTHENTICATED', 'Please log in');
+          },
+        },
+      ],
+    });
+    expect(await screen.findByRole('button', { name: 'Sign in' })).toBeInTheDocument();
+  });
+
+  it('a normal server (login required) still shows no test-mode notice', async () => {
+    const user = userEvent.setup();
+    renderApp();
+    await signIn(user);
+    const bar = within(await screen.findByRole('banner'));
+    expect(bar.queryByText(/test mode/i)).toBeNull();
+    expect(bar.getByRole('button', { name: 'Sign out' })).toBeInTheDocument();
+  });
+});

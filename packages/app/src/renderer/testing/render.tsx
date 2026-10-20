@@ -40,6 +40,7 @@ function staticSession(partial: Partial<SessionValue>): SessionValue {
     reloadYears: async () => {},
     can: () => true,
     logout: () => {},
+    testMode: false,
     ...partial,
   };
 }

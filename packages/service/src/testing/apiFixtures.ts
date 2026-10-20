@@ -23,12 +23,12 @@ export interface ApiFixture {
   close(): Promise<void>;
 }
 
-export async function setupApi(opts: { backup?: BackupConfig } = {}): Promise<ApiFixture> {
+export async function setupApi(opts: { backup?: BackupConfig; noLogin?: boolean } = {}): Promise<ApiFixture> {
   const db = await createTestDb();
   const s = await seedCompany(db);
   const adminId = await createUser(db, { username: 'boss', password: 'adminpass', isAdmin: true, canExportAudit: true });
   const adminToken = (await login(db, 'boss', 'adminpass')).token;
-  const app = buildApp({ db, backup: opts.backup });
+  const app = buildApp({ db, backup: opts.backup, noLogin: opts.noLogin });
   await app.ready();
   return {
     db,
