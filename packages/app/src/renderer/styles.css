@@ -129,5 +129,9 @@ button.primary { border-bottom: 3px solid var(--gold); }
 .open-tab button.close:hover { color: var(--bad); }
 .open-tab.on { background: var(--bg); border-top: 3px solid var(--accent); font-weight: 600; }
 .notice { margin: 0; padding: 6px 16px; background: #fdf0d0; border-bottom: 1px solid var(--gold); color: var(--ink); }
+.quick-bar { display: flex; flex-wrap: wrap; gap: 2px; padding: 5px 12px; background: #071f21; }
+.quick-bar button { padding: 4px 12px; border: 0; border-right: 1px solid rgba(255, 255, 255, 0.18); border-radius: 0; background: none; color: #f3ead2; font-weight: 600; }
+.quick-bar button:hover { background: rgba(217, 154, 30, 0.35); }
+.quick-bar button.later { color: #a9b8b4; font-weight: 400; }
 .quick { display: flex; flex-wrap: wrap; gap: 8px; }
 .tabpanel[hidden] { display: none; }

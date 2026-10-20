@@ -58,7 +58,7 @@ function runSmoke(win: BrowserWindow): void {
 }
 
 void app.whenReady().then(() => {
-  if (app.isPackaged) Menu.setApplicationMenu(null);
+  Menu.setApplicationMenu(null); // no File / Edit / View / Window bar: the app has its own tabs
   const dir = app.getPath('userData');
   const fetchFn = fetch as unknown as FetchLike;
 

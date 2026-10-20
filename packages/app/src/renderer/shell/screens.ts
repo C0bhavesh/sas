@@ -139,4 +139,36 @@ export const PAGE_TITLES: Record<keyof typeof PAGE_SHORTCUTS, string> = {
   years: 'Years page',
 };
 
-export const ALL_GLOBAL: ShortcutDecl[] = [...GLOBAL_SHORTCUTS, ...OPENERS];
+/** The quick row under the section tabs. Screens that do not exist yet say so instead of opening. */
+export interface QuickItem {
+  id: string;
+  label: string;
+  /** Alt+digit or a function key. Items without keys use the screen's own hotkey. */
+  keys?: string;
+  screen?: ScreenId;
+  /** Name of the feature when its screen belongs to a later stage. */
+  later?: string;
+}
+
+export const QUICK_BAR: QuickItem[] = [
+  { id: 'sales', label: '1 Sales', keys: 'Alt+1', later: 'Sales' },
+  { id: 'purchase', label: '2 Pur', keys: 'Alt+2', later: 'Purchase' },
+  { id: 'receipt', label: '3 Rec', keys: 'Alt+3', screen: 'receipt' },
+  { id: 'payment', label: '4 Pay', keys: 'Alt+4', screen: 'payment' },
+  { id: 'ledger', label: 'Ledger', screen: 'rLedger' },
+  { id: 'trial', label: 'Z Trail', keys: 'Alt+Z', screen: 'rTrial' },
+  { id: 'millIssue', label: '5 M.Iss', keys: 'Alt+5', later: 'Mill issue' },
+  { id: 'millReceive', label: '6 M.Rec', keys: 'Alt+6', later: 'Mill receive' },
+  { id: 'jobIssue', label: '7 J.Iss', keys: 'Alt+7', later: 'Job-work issue' },
+  { id: 'jobReceive', label: '8 J.Rec', keys: 'Alt+8', later: 'Job-work receive' },
+  { id: 'debtors', label: '9 Debt O/s', keys: 'Alt+9', screen: 'rAgeing' },
+  { id: 'help', label: 'F10 Help', keys: 'F10', screen: 'help' },
+];
+
+const QUICK_SHORTCUTS: ShortcutDecl[] = QUICK_BAR.filter((q) => q.keys).map((q) => ({
+  id: `quick:${q.id}`,
+  keys: q.keys!,
+  description: q.later ? `${q.later} (comes in a later stage)` : `Open ${SCREEN_BY_ID[q.screen!].title}`,
+}));
+
+export const ALL_GLOBAL: ShortcutDecl[] = [...GLOBAL_SHORTCUTS, ...OPENERS, ...QUICK_SHORTCUTS];

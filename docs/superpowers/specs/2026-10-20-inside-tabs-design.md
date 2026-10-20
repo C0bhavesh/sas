@@ -8,3 +8,7 @@ Status: direction given by the user on 2026-10-20 ("my row, all tabs fixed, drop
 - **Closing:** the x button, or Ctrl+W. After closing, the most recently used tab shows, otherwise Home. Ctrl+Tab and Ctrl+Shift+Tab move between tabs. Esc never closes a tab.
 - **No shortcut keys on screen:** no key hints on tabs, menus, buttons, hints or the palette. They are listed only in Help (F1). The keys themselves still work.
 - **Look:** same palette as the login page: woven teal header, dark teal section row with the active tab in ivory under a gold line, ivory open-screens row.
+
+## Quick row (added from the user's JSM screenshot)
+
+A dark row under the section tabs, like JSM: `1 Sales, 2 Pur, 3 Rec, 4 Pay, Ledger, Z Trail, 5 M.Iss, 6 M.Rec, 7 J.Iss, 8 J.Rec, 9 Debt O/s, F10 Help`. The user chose to show the numbers on this row (the only place keys appear on screen). Digits work as Alt+digit (so typing a number in a field is never hijacked), Z Trail is Alt+Z, F10 opens Help; all are listed in Help. Receipt, Payment, Ledger, Trial Balance, Debtors O/s (ageing) and Help open their tabs. Sales, Purchase, Mill and Job-work issue/receive belong to later sub-projects: the buttons are shown (muted) and say "... will be available in a later stage". A button for a screen the user may not use is left out. The default Electron menu bar (File / Edit / View / Window) is removed.

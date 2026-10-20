@@ -4,7 +4,7 @@ import { useSession } from '../session/Session';
 import { NavContext, TabActiveContext, type NavValue, type ScreenRef } from './nav';
 import { Palette } from './Palette';
 import { SCREEN_COMPONENTS } from './screenComponents';
-import { ALL_GLOBAL, SCREEN_BY_ID, SCREENS, type ScreenGroup, type ScreenId } from './screens';
+import { ALL_GLOBAL, QUICK_BAR, SCREEN_BY_ID, SCREENS, type QuickItem, type ScreenGroup, type ScreenId } from './screens';
 import { initialTabs, MAX_TABS, tabsReducer } from './tabs';
 import { canSee } from './visibility';
 
@@ -124,16 +124,28 @@ export function Shell() {
   const session = useSession();
   const [state, dispatch] = useReducer(tabsReducer, initialTabs);
   const [overlay, setOverlay] = useState<null | 'palette'>(null);
+  const [later, setLater] = useState<string | null>(null);
   const current = state.tabs.find((t) => t.id === state.active) ?? HOME;
 
   const open = useCallback((id: ScreenId, props?: Record<string, unknown>) => {
     dispatch({ type: 'open', id, props });
     setOverlay(null);
+    setLater(null);
   }, []);
   const back = useCallback(() => dispatch({ type: 'close', id: current.id }), [current.id]);
 
   const visible = useMemo(() => SCREENS.filter((s) => canSee(s, session)), [session]);
   const nav = useMemo<NavValue>(() => ({ current, open, back }), [current, open, back]);
+
+  const quick = useMemo(() => QUICK_BAR.filter((q) => q.later || canSee(SCREEN_BY_ID[q.screen!], session)), [session]);
+  const pressQuick = useCallback(
+    (q: QuickItem) => {
+      if (q.screen) open(q.screen);
+      else setLater(`${q.later} will be available in a later stage of the software.`);
+    },
+    [open],
+  );
+  const quickHandlers = Object.fromEntries(quick.filter((q) => q.keys).map((q) => [`quick:${q.id}`, () => pressQuick(q)] as const));
 
   const openerHandlers = Object.fromEntries(
     visible
@@ -150,6 +162,7 @@ export function Shell() {
     nextTab: () => dispatch({ type: 'cycle', direction: 1 }),
     previousTab: () => dispatch({ type: 'cycle', direction: -1 }),
     ...openerHandlers,
+    ...quickHandlers,
   });
 
   const Home = SCREEN_COMPONENTS.home;
@@ -190,6 +203,19 @@ export function Shell() {
             Help
           </button>
         </div>
+
+        <div role="toolbar" aria-label="Quick access" className="quick-bar">
+          {quick.map((q) => (
+            <button key={q.id} className={q.later ? 'later' : undefined} onClick={() => pressQuick(q)}>
+              {q.label}
+            </button>
+          ))}
+        </div>
+        {later && (
+          <p role="status" aria-label="Coming later" className="notice">
+            {later}
+          </p>
+        )}
 
         {state.tabs.length > 0 && (
           <div role="tablist" aria-label="Open screens" className="tabs-open">

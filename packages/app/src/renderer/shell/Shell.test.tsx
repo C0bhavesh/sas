@@ -184,6 +184,51 @@ describe('the row of open screens', () => {
   });
 });
 
+describe('the quick row', () => {
+  const bar = () => within(screen.getByRole('toolbar', { name: 'Quick access' }));
+  const labels = () => bar().getAllByRole('button').map((b) => b.textContent);
+
+  it('lists the quick buttons with their numbers, like the old software', async () => {
+    await openShell();
+    expect(labels()).toEqual(['1 Sales', '2 Pur', '3 Rec', '4 Pay', 'Ledger', 'Z Trail', '5 M.Iss', '6 M.Rec', '7 J.Iss', '8 J.Rec', '9 Debt O/s', 'F10 Help']);
+  });
+
+  it('opens the matching screen as a tab', async () => {
+    const { user } = await openShell();
+    await user.click(bar().getByRole('button', { name: '3 Rec' }));
+    expect(await screen.findByRole('heading', { name: 'Cash / Bank Receipt' })).toBeInTheDocument();
+    await user.click(bar().getByRole('button', { name: 'Z Trail' }));
+    expect(await screen.findByRole('heading', { name: 'Trial Balance' })).toBeInTheDocument();
+    await user.click(bar().getByRole('button', { name: '9 Debt O/s' }));
+    expect(await screen.findByRole('heading', { name: 'Outstanding Ageing' })).toBeInTheDocument();
+    await user.click(bar().getByRole('button', { name: 'F10 Help' }));
+    expect(await screen.findByRole('heading', { name: 'Keyboard shortcuts' })).toBeInTheDocument();
+    expect(openTabNames()).toEqual(['Cash / Bank Receipt', 'Trial Balance', 'Outstanding Ageing', 'Help']);
+  });
+
+  it('says so, and opens nothing, for a screen that comes in a later stage', async () => {
+    const { user } = await openShell();
+    await user.click(bar().getByRole('button', { name: '1 Sales' }));
+    expect(await screen.findByRole('status', { name: 'Coming later' })).toHaveTextContent(/Sales .* later stage/i);
+    expect(openTabs()).toBeNull();
+  });
+
+  it('works from the keyboard with Alt and the number', async () => {
+    const { user } = await openShell();
+    await user.keyboard('{Alt>}3{/Alt}');
+    expect(await screen.findByRole('heading', { name: 'Cash / Bank Receipt' })).toBeInTheDocument();
+    await user.keyboard('{Alt>}2{/Alt}');
+    expect(await screen.findByRole('status', { name: 'Coming later' })).toHaveTextContent(/Purchase/i);
+    await user.keyboard('{F10}');
+    expect(await screen.findByRole('heading', { name: 'Keyboard shortcuts' })).toBeInTheDocument();
+  });
+
+  it('leaves out the buttons for screens the user may not use', async () => {
+    await openShell({ me: ME_CLERK });
+    expect(labels()).toEqual(['1 Sales', '2 Pur', '3 Rec', '4 Pay', '5 M.Iss', '6 M.Rec', '7 J.Iss', '8 J.Rec', 'F10 Help']);
+  });
+});
+
 describe('keyboard and Help', () => {
   it('F1 opens Help as a tab', async () => {
     const { user } = await openShell();
