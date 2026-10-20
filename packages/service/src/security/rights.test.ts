@@ -10,6 +10,7 @@ import {
   assertLedgersVisible,
   assertRight,
   getRights,
+  getUserAccess,
   hiddenGroupIds,
   setBlockedGroups,
   setHiddenCompanies,
@@ -128,5 +129,29 @@ describe('uses createLedger so the fixtures are real', () => {
     await setBlockedGroups(db, clerk.userId, [await groupId(42)]);
     const id = await createLedger(db, { companyId: s.companyId, groupCode: 42, name: 'New Party' });
     expect(id).toBeTruthy();
+  });
+});
+
+describe('getUserAccess', () => {
+  it('returns what was set for blocked groups and hidden companies', async () => {
+    const other = await createCompany(db, { code: 'C2', name: 'Other Co', fyLabel: '2026-27', fyStart: '2026-04-01', fyEnd: '2027-03-31' });
+    await setBlockedGroups(db, clerk.userId, [await groupId(42)]);
+    await setHiddenCompanies(db, clerk.userId, [other.companyId]);
+    const access = await getUserAccess(db, clerk.userId);
+    expect(access.blockedGroupIds).toEqual([await groupId(42)]);
+    expect(access.hiddenCompanyIds).toEqual([other.companyId]);
+  });
+  it('is empty for a user with no restrictions', async () => {
+    expect(await getUserAccess(db, clerk.userId)).toEqual({ blockedGroupIds: [], hiddenCompanyIds: [] });
+  });
+});
+
+describe('visibleCompanies', () => {
+  it('includes the freeze date', async () => {
+    await db.query(`UPDATE companies SET freeze_date = '2026-06-30' WHERE id = $1`, [s.companyId]);
+    const rows = await visibleCompanies(db, admin);
+    expect(rows[0]).toMatchObject({ code: 'C1', freezeDate: '2026-06-30' });
+    await db.query('UPDATE companies SET freeze_date = NULL WHERE id = $1', [s.companyId]);
+    expect((await visibleCompanies(db, admin))[0]!.freezeDate).toBeNull();
   });
 });

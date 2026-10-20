@@ -6,7 +6,7 @@
 
 **Architecture:** An Electron app in a new workspace package `@sas/app`. The renderer is React + TypeScript and contains screens only: no accounting logic beyond reusing the pure voucher rules from `@sas/shared` for instant feedback. It talks to the service from Plan B through a small bridge: the renderer calls `window.sas.request(...)`, the Electron main process forwards the call to the configured server over HTTP (so there is no CORS and no network code in the renderer). Every shortcut is declared once, in `screens.ts`; screens bind handlers to those declarations and the Help screen is generated from the same data.
 
-**Tech Stack:** Electron (newest stable at execution time), electron-vite 2, Vite 5, React 18, TypeScript 5, vitest 2 + jsdom + Testing Library for component tests. The service from Plans A and B runs as the back end.
+**Tech Stack:** Electron, electron-vite, Vite, React 18, TypeScript 5, vitest + jsdom + Testing Library for component tests. The service from Plans A and B runs as the back end. As built (2026-10-20): Electron 44.9.1, electron-vite 6, Vite 8, vitest 5, jsdom 29; the plan was first written against Electron 33 / vitest 2, which `npm audit` flags (Electron: high severity).
 
 **Prerequisites:** Plans A and B merged on `main`. `npm test` is green (185 passed, 1 skipped).
 
@@ -111,7 +111,7 @@ packages/service/src/...                      small additions in Tasks 11, 14, 1
     "dev": "electron-vite dev",
     "build": "electron-vite build",
     "preview": "electron-vite preview",
-    "smoke": "electron-vite build && electron . --smoke"
+    "smoke": "electron-vite build && node scripts/smoke.mjs"
   },
   "dependencies": {
     "@sas/shared": "*",
@@ -693,6 +693,8 @@ Expected: the app tests PASS (config 5, request 6, App 1); the build writes `pac
 
 Run: `npm run smoke -w @sas/app`
 Expected: output ends with `SMOKE OK` and the exit code is 0. If it prints `SMOKE FAIL: the preload bridge (window.sas) is missing`, check that `out/preload/index.js` exists and that the `preload` path in `main/index.ts` matches it. If Electron cannot open a window at all (no desktop session), note it in the task report and rely on the build plus the component tests.
+
+(Built as: `packages/app/scripts/smoke.mjs` starts Electron through Node with `ELECTRON_RUN_AS_NODE` removed from the environment. Editors such as VS Code set that variable for the programs they start, and with it set Electron runs as plain Node, so `require('electron').app` is undefined and the app dies with "Cannot read properties of undefined (reading 'setPath')". Run the same way, `npm run dev` needs the variable unset too; see the app README.)
 
 - [ ] **Step 7: Commit**
 
@@ -1549,7 +1551,7 @@ describe('createBridgeClient', () => {
 
   it('turns an unreachable server into a NETWORK error', async () => {
     const api = createBridgeClient(bridgeReturning({ status: 0, json: { code: 'NETWORK', message: 'Cannot reach the server.' } }));
-    const err = await api.request('GET', '/api/x').catch((e) => e);
+    const err = await api.request<never>('GET', '/api/x').catch((e) => e as ApiError);
     expect(err).toBeInstanceOf(ApiError);
     expect(err.status).toBe(0);
     expect(err.code).toBe('NETWORK');
@@ -1557,7 +1559,7 @@ describe('createBridgeClient', () => {
 
   it('gives a generic message when the error body has none', async () => {
     const api = createBridgeClient(bridgeReturning({ status: 500, json: null }));
-    const err = await api.request('GET', '/api/x').catch((e) => e);
+    const err = await api.request<never>('GET', '/api/x').catch((e) => e as ApiError);
     expect(err.code).toBe('ERROR');
     expect(err.message).toMatch(/500/);
   });
@@ -2220,7 +2222,7 @@ describe('Palette', () => {
 
 `packages/app/src/renderer/App.test.tsx` (replace the Task 1 test):
 ```tsx
-import { act, screen, waitFor } from '@testing-library/react';
+import { act, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import { ApiError } from './api/client';
@@ -2255,8 +2257,9 @@ describe('App start-up and login', () => {
     const user = userEvent.setup();
     const { bridge } = renderApp();
     await signIn(user);
-    expect(await screen.findByText('Test Textiles')).toBeInTheDocument();
-    expect(screen.getByText('2026-27')).toBeInTheDocument(); // the open year is chosen
+    const bar = within(await screen.findByRole('banner'));
+    expect(bar.getByText('Test Textiles')).toBeInTheDocument();
+    expect(bar.getByText('2026-27')).toBeInTheDocument(); // the open year is chosen
     await waitFor(() => expect(bridge.config.lastCompanyId).toBe('c1'));
     expect(bridge.config.lastYearId).toBe('y1');
   });
@@ -2265,7 +2268,7 @@ describe('App start-up and login', () => {
     const user = userEvent.setup();
     renderApp({ bridge: createFakeBridge({ lastCompanyId: 'c1', lastYearId: 'y0' }) });
     await signIn(user);
-    expect(await screen.findByText('2025-26')).toBeInTheDocument();
+    expect(within(await screen.findByRole('banner')).getByText('2025-26')).toBeInTheDocument();
   });
 
   it('offers to fix the server address when the server cannot be reached', async () => {
@@ -2297,7 +2300,7 @@ describe('App start-up and login', () => {
     const user = userEvent.setup();
     const { api } = renderApp();
     await signIn(user);
-    await screen.findByText('Test Textiles');
+    await screen.findByRole('banner');
     act(() => api.onUnauthorized?.());
     expect(await screen.findByRole('button', { name: 'Sign in' })).toBeInTheDocument();
     expect(screen.getByText(/session has ended/i)).toBeInTheDocument();
@@ -2408,7 +2411,7 @@ describe('Shell keyboard', () => {
     const year = await screen.findByLabelText('Financial year');
     await user.selectOptions(year, 'y0');
     await user.keyboard('{Escape}');
-    expect(await screen.findByText('2025-26')).toBeInTheDocument();
+    expect(within(await screen.findByRole('banner')).getByText('2025-26')).toBeInTheDocument();
   });
 });
 
@@ -2643,7 +2646,8 @@ export function focusNextNav(from: HTMLElement): boolean {
 /** Makes Enter act like Tab inside a form. On the very last field it calls `onLast` instead. */
 export function NavRoot({ onLast, children, className }: { onLast?: () => void; children: ReactNode; className?: string }) {
   function onKeyDown(e: KeyboardEvent<HTMLDivElement>) {
-    if (e.key !== 'Enter' || e.defaultPrevented) return;
+    // Only a plain Enter moves on; Ctrl+Enter and friends belong to the screen's own shortcuts.
+    if (e.key !== 'Enter' || e.ctrlKey || e.altKey || e.metaKey || e.defaultPrevented) return;
     const target = e.target as HTMLElement;
     if (!target.hasAttribute('data-nav') || target.tagName === 'TEXTAREA') return;
     e.preventDefault();
@@ -3578,7 +3582,7 @@ describe('Lookup', () => {
   it('filters while typing and shows the details', async () => {
     const user = userEvent.setup();
     render(<Harness />);
-    await user.type(screen.getByRole('combobox', { name: 'Account' }), 'sur');
+    await user.type(screen.getByRole('combobox', { name: 'Account' }), 'sures'); // 'sur' would also match the two Surat parties by city
     const options = screen.getAllByRole('option');
     expect(options.map((o) => o.textContent)).toEqual([expect.stringContaining('Suresh Textiles')]);
   });
@@ -3764,7 +3768,8 @@ export function clampToYear(iso: string, start: string, end: string): string {
  */
 export function parseDateInput(text: string, ctx: DateCtx): string | null {
   const t = text.trim();
-  if (t === '' || /[^0-9\s/.\-]/.test(t)) return null;
+  // Only digits and the separators / . - are allowed, and a separator at either end is a typo, not a date.
+  if (t === '' || /[^0-9\s/.\-]/.test(t) || /^[/.\-]|[/.\-]$/.test(t)) return null;
 
   let d: number;
   let m: number | undefined;
@@ -7998,7 +8003,7 @@ export function toCsv<T>(columns: Column<T>[], rows: T[], extra: { title?: strin
 
 /** A file-name-safe word. Letters and digits of any script are kept (Gujarati names stay readable). */
 export function slug(text: string): string {
-  return text.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-+|-+$/g, '') || 'report';
+  return text.toLowerCase().replace(/[^\p{L}\p{M}\p{N}]+/gu, '-').replace(/^-+|-+$/g, '') || 'report';
 }
 ```
 
@@ -8588,7 +8593,7 @@ describe('AgeingReport', () => {
     expect(row).toHaveTextContent('1,00,000.00');
     expect(row).toHaveTextContent('1,00,600.00');
     expect(row).toHaveTextContent('500.00');
-    expect(within(grid).getByText('Total').closest('tr')).toHaveTextContent('1,00,100.00');
+    expect(grid.querySelector('tfoot')).toHaveTextContent('1,00,100.00'); // the Total column header would also match getByText('Total')
     expect(api.calls.find((c) => c.path.startsWith('/api/reports/ageing'))!.path).toMatch(/^\/api\/reports\/ageing\?companyId=c1&asOn=\d{4}-\d{2}-\d{2}$/);
   });
 
@@ -9304,7 +9309,7 @@ describe('UsersScreen', () => {
     const { posts } = setup();
     await screen.findByRole('grid', { name: 'Users' });
     await user.keyboard('{Control>}n{/Control}');
-    await user.type(await screen.findByLabelText('Username'), 'ravi{Enter}secret12{Enter}ravi@x.in{Enter}');
+    await user.type(await screen.findByLabelText('Username'), 'ravi{Enter}secret12{Enter}ravi@x.in');
     await user.click(screen.getByRole('checkbox', { name: 'Administrator' }));
     await user.keyboard('{Control>}s{/Control}');
     expect(await screen.findByRole('status')).toHaveTextContent('User ravi created');
@@ -9953,7 +9958,7 @@ describe('backup and restore', () => {
     const { calls, counts } = setup();
     await screen.findByRole('grid', { name: 'Backups' });
     await user.click(screen.getByRole('combobox', { name: 'Backup file' }));
-    await user.keyboard('0003{Enter}'); // sas-20261003-010000.dump
+    await user.keyboard('1003{Enter}'); // sas-20261003-010000.dump
     await user.click(screen.getByRole('button', { name: 'Restore…' }));
     expect(await screen.findByRole('alert')).toHaveTextContent(/enter your password/i);
     await user.type(screen.getByLabelText('Your password'), 'adminpass1');
@@ -9971,7 +9976,7 @@ describe('backup and restore', () => {
     const { counts } = setup({ extra: [{ method: 'POST', path: '/api/restore', reply: () => { throw new ApiError(403, 'FORBIDDEN', 'Wrong administrator password'); } }] });
     await screen.findByRole('grid', { name: 'Backups' });
     await user.click(screen.getByRole('combobox', { name: 'Backup file' }));
-    await user.keyboard('0003{Enter}');
+    await user.keyboard('1003{Enter}');
     await user.type(screen.getByLabelText('Your password'), 'nope');
     await user.click(screen.getByRole('button', { name: 'Restore…' }));
     await user.click(within(await screen.findByRole('dialog', { name: 'Restore backup' })).getByRole('button', { name: 'Restore' }));
@@ -10660,7 +10665,7 @@ describe('the desktop app against the real service', () => {
     const user = userEvent.setup();
     renderApp({ api: realClient(server.url), bridge: bridge() });
     await signIn(user, 'admin', server.adminPassword);
-    await screen.findByText('Test Textiles');
+    await screen.findByRole('banner');
 
     // Receipt: F4, date, account, amount
     await user.keyboard('{F4}');
@@ -10703,7 +10708,7 @@ describe('the desktop app against the real service', () => {
     const user = userEvent.setup();
     renderApp({ api: realClient(server.url), bridge: bridge() });
     await signIn(user, 'admin', server.adminPassword);
-    await screen.findByText('Test Textiles');
+    await screen.findByRole('banner');
     await user.keyboard('{F6}');
     await screen.findByRole('combobox', { name: 'Book' });
     await user.keyboard('12052026{Enter}{Enter}');
@@ -10740,7 +10745,7 @@ describe('the desktop app against the real service', () => {
     const api = realClient(server.url);
     renderApp({ api, bridge: bridge() });
     await signIn(user, 'admin', server.adminPassword);
-    await screen.findByText('Test Textiles');
+    await screen.findByRole('banner');
     api.setToken('a-token-the-server-does-not-know');
     await user.keyboard('{F7}'); // any call now fails with 401
     expect(await screen.findByRole('button', { name: 'Sign in' })).toBeInTheDocument();

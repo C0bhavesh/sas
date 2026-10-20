@@ -8,6 +8,8 @@ export interface AppDeps {
   /** Needed only for the backup and restore routes. */
   backup?: BackupConfig;
   logger?: boolean;
+  /** Test mode: requests without a valid token act as the first administrator. Never enable in production. */
+  noLogin?: boolean;
 }
 
 declare module 'fastify' {

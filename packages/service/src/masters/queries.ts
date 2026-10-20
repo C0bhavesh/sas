@@ -69,3 +69,20 @@ export async function listBooks(
   );
   return rows.map((r) => ({ id: r.id, code: r.code, name: r.name, type: r.type, defaultLedgerId: r.default_ledger_id }));
 }
+export async function listOpenings(
+  q: Queryable,
+  companyId: string,
+  yearId: string,
+  hidden: string[] = [],
+): Promise<{ ledgerId: string; ledgerName: string; groupName: string; amount: string; side: 'Dr' | 'Cr' }[]> {
+  const rows = await q.query<{ ledger_id: string; ledger_name: string; group_name: string; amount: string; side: 'Dr' | 'Cr' }>(
+    `SELECT l.id AS ledger_id, l.name AS ledger_name, g.name AS group_name, o.amount, o.side
+     FROM ledger_openings o
+     JOIN ledgers l ON l.id = o.ledger_id
+     JOIN account_groups g ON g.id = l.group_id
+     WHERE l.company_id = $1 AND o.year_id = $2 AND NOT (l.group_id = ANY($3::uuid[]))
+     ORDER BY lower(l.name)`,
+    [companyId, yearId, hidden],
+  );
+  return rows.map((r) => ({ ledgerId: r.ledger_id, ledgerName: r.ledger_name, groupName: r.group_name, amount: r.amount, side: r.side }));
+}

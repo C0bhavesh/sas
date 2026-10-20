@@ -91,3 +91,32 @@ describe('creating masters', () => {
     expect(foreign.statusCode).toBe(422);
   });
 });
+
+describe('opening balances list', () => {
+  const url = () => `/api/companies/${f.s.companyId}/openings?yearId=${f.s.yearId}`;
+
+  it('lists the openings of a year, oldest name first, and respects rights and blocked groups', async () => {
+    await post(`/api/ledgers/${f.s.partyLedgerId}/opening`, { yearId: f.s.yearId, amount: '1500.50', side: 'Dr' });
+    await post(`/api/ledgers/${f.s.cashLedgerId}/opening`, { yearId: f.s.yearId, amount: '20', side: 'Cr' });
+    const r = await get(url());
+    expect(r.statusCode).toBe(200);
+    expect(r.json()).toEqual([
+      { ledgerId: f.s.cashLedgerId, ledgerName: 'Cash', groupName: 'Cash-in-Hand', amount: '20.00', side: 'Cr' },
+      { ledgerId: f.s.partyLedgerId, ledgerName: 'Ramesh Traders', groupName: 'Sundry Debtors', amount: '1500.50', side: 'Dr' },
+    ]);
+
+    const nobody = await f.addUser('nobody');
+    expect((await get(url(), nobody.token)).statusCode).toBe(403);
+
+    const viewer = await f.addUser('viewer', { account_master: { find: true } });
+    expect((await get(url(), viewer.token)).json()).toHaveLength(2);
+    const g42 = (await f.db.query<{ id: string }>('SELECT id FROM account_groups WHERE company_id = $1 AND code = 42', [f.s.companyId]))[0]!.id;
+    await setBlockedGroups(f.db, viewer.id, [g42]);
+    expect((await get(url(), viewer.token)).json().map((o: { ledgerName: string }) => o.ledgerName)).toEqual(['Cash']);
+  });
+
+  it('is empty for a year with no openings and rejects a missing year', async () => {
+    expect((await get(url())).json()).toEqual([]);
+    expect((await get(`/api/companies/${f.s.companyId}/openings`)).statusCode).toBe(400);
+  });
+});

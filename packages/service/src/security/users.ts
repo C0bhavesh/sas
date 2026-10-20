@@ -90,3 +90,12 @@ export async function listUsers(
   );
   return rows.map((r) => ({ id: r.id, username: r.username, isAdmin: r.is_admin, status: r.status, email: r.email }));
 }
+
+/** The oldest active administrator. Used only by test mode, to act on behalf of when no one has signed in. */
+export async function firstAdministrator(q: Queryable): Promise<Actor | null> {
+  const rows = await q.query<{ id: string; username: string }>(
+    `SELECT id, username FROM users WHERE is_admin AND status = 'active' ORDER BY created_at, id LIMIT 1`,
+  );
+  const u = rows[0];
+  return u ? { userId: u.id, username: u.username, isAdmin: true } : null;
+}

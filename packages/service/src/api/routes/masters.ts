@@ -4,7 +4,7 @@ import { AppError, AuthError } from '@sas/shared';
 import { createBook } from '../../masters/books';
 import { createCompany } from '../../masters/companies';
 import { createLedger, setOpening } from '../../masters/ledgers';
-import { listBooks, listGroups, listLedgers, listYears } from '../../masters/queries';
+import { listBooks, listGroups, listLedgers, listOpenings, listYears } from '../../masters/queries';
 import { writeAudit } from '../../security/audit';
 import { assertCompanyVisible, assertRight, hiddenGroupIds, visibleCompanies } from '../../security/rights';
 import { newBookBody, newCompanyBody, newLedgerBody, openingBody, uuid } from '../schemas';
@@ -141,5 +141,14 @@ export function registerMasterRoutes(app: FastifyInstance, deps: AppDeps): void 
       return bookId;
     });
     return reply.code(201).send({ id });
+  });
+
+  app.get('/api/companies/:companyId/openings', async (req) => {
+    const { companyId } = companyParam.parse(req.params);
+    const { yearId } = z.object({ yearId: uuid }).parse(req.query);
+    const actor = req.actor!;
+    await assertCompanyVisible(db, actor, companyId);
+    await assertRight(db, actor, 'account_master', 'find');
+    return listOpenings(db, companyId, yearId, await hiddenGroupIds(db, actor, companyId));
   });
 }
