@@ -6,6 +6,8 @@ export interface Column<T> {
   numeric?: boolean;
   /** Plain text: used for display, and by CSV export. */
   value: (row: T) => string;
+  /** Raw text for CSV export (for example 1500.00 without digit grouping). Defaults to `value`. */
+  csv?: (row: T) => string;
   /** Overrides how the cell is displayed (not the CSV text). */
   render?: (row: T) => ReactNode;
 }

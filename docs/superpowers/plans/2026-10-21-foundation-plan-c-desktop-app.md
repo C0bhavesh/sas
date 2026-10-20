@@ -8001,7 +8001,7 @@ export function toCsv<T>(columns: Column<T>[], rows: T[], extra: { title?: strin
 
 /** A file-name-safe word. Letters and digits of any script are kept (Gujarati names stay readable). */
 export function slug(text: string): string {
-  return text.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-+|-+$/g, '') || 'report';
+  return text.toLowerCase().replace(/[^\p{L}\p{M}\p{N}]+/gu, '-').replace(/^-+|-+$/g, '') || 'report';
 }
 ```
 

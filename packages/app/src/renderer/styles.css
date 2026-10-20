@@ -57,3 +57,8 @@ table.data tfoot td { font-weight: 600; border-top: 2px solid var(--line); }
   .main { overflow: visible; padding: 0; }
   body { background: #fff; }
 }
+
+.print-only { display: none; }
+@media print {
+  .print-only { display: block; margin-bottom: 8px; }
+}

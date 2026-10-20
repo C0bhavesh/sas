@@ -112,3 +112,72 @@ export const listOpenings = (api: ApiClient, companyId: string, yearId: string) 
 
 export const createBook = (api: ApiClient, companyId: string, body: { code: string; name: string; type: string; defaultLedgerId?: string }) =>
   api.request<{ id: string }>('POST', `/api/companies/${companyId}/books`, body);
+
+export interface TrialBalanceDto {
+  rows: { ledgerId: string; ledgerName: string; groupCode: number; groupName: string; debit: string; credit: string }[];
+  groups: { code: number; name: string; nature: string; debit: string; credit: string }[];
+  totalDebit: string;
+  totalCredit: string;
+  difference: string;
+}
+export interface SectionDto {
+  groups: { code: number; name: string; amount: string; ledgers: { ledgerId: string; name: string; amount: string }[] }[];
+  total: string;
+}
+export interface ProfitLossDto {
+  income: SectionDto;
+  expense: SectionDto;
+  netProfit: string;
+}
+export interface BalanceSheetDto {
+  assets: SectionDto;
+  liabilities: SectionDto;
+  netProfit: string;
+  totalAssets: string;
+  totalLiabilities: string;
+  difference: string;
+}
+export interface AgeingDto {
+  bucketLabels: string[];
+  rows: { ledgerId: string; ledgerName: string; side: 'Dr' | 'Cr'; buckets: string[]; total: string; onAccount: string; net: string }[];
+  totals: { buckets: string[]; total: string; onAccount: string; net: string };
+}
+
+interface AsOn {
+  companyId: string;
+  yearId: string;
+  asOn: string;
+}
+export const trialBalanceReport = (api: ApiClient, p: AsOn) => api.request<TrialBalanceDto>('GET', `/api/reports/trial-balance${queryString({ ...p })}`);
+export const profitLossReport = (api: ApiClient, p: AsOn) => api.request<ProfitLossDto>('GET', `/api/reports/profit-loss${queryString({ ...p })}`);
+export const balanceSheetReport = (api: ApiClient, p: AsOn) => api.request<BalanceSheetDto>('GET', `/api/reports/balance-sheet${queryString({ ...p })}`);
+export const ageingReport = (api: ApiClient, p: { companyId: string; asOn: string; side?: 'Dr' | 'Cr'; ledgerId?: string }) =>
+  api.request<AgeingDto>('GET', `/api/reports/ageing${queryString({ ...p })}`);
+
+export interface DrCr {
+  amount: string;
+  side: 'Dr' | 'Cr';
+}
+
+export interface LedgerReportDto {
+  ledgerName: string;
+  opening: DrCr;
+  rows: { date: string; voucherNo: number; bookCode: string; narration: string | null; debit: string; credit: string; balance: DrCr }[];
+  totalDebit: string;
+  totalCredit: string;
+  closing: DrCr;
+}
+
+export interface CashBookDayDto {
+  date: string;
+  opening: DrCr;
+  receipts: string;
+  payments: string;
+  closing: DrCr;
+}
+
+export const ledgerReport = (api: ApiClient, p: { companyId: string; yearId: string; ledgerId: string; from: string; to: string }) =>
+  api.request<LedgerReportDto>('GET', `/api/reports/ledger${queryString(p)}`);
+
+export const cashBookReport = (api: ApiClient, p: { companyId: string; yearId: string; bookId: string; from: string; to: string }) =>
+  api.request<CashBookDayDto[]>('GET', `/api/reports/cash-book${queryString(p)}`);

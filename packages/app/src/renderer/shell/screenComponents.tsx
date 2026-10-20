@@ -5,6 +5,8 @@ import { BookScreen } from '../masters/BookScreen';
 import { CompanyScreen } from '../masters/CompanyScreen';
 import { LedgerScreen } from '../masters/LedgerScreen';
 import { OpeningScreen } from '../masters/OpeningScreen';
+import { CashBookReport } from '../reports/CashBookReport';
+import { LedgerReport } from '../reports/LedgerReport';
 import { VoucherEntry } from '../vouchers/VoucherEntry';
 import { VoucherList } from '../vouchers/VoucherList';
 import { SCREENS, type ScreenId } from './screens';
@@ -39,4 +41,6 @@ export const SCREEN_COMPONENTS: Record<ScreenId, ComponentType<any>> = {
   ledgers: LedgerScreen,
   openings: OpeningScreen,
   books: BookScreen,
+  rLedger: LedgerReport,
+  rCashBook: CashBookReport,
 };
