@@ -8591,7 +8591,7 @@ describe('AgeingReport', () => {
     expect(row).toHaveTextContent('1,00,000.00');
     expect(row).toHaveTextContent('1,00,600.00');
     expect(row).toHaveTextContent('500.00');
-    expect(within(grid).getByText('Total').closest('tr')).toHaveTextContent('1,00,100.00');
+    expect(grid.querySelector('tfoot')).toHaveTextContent('1,00,100.00'); // the Total column header would also match getByText('Total')
     expect(api.calls.find((c) => c.path.startsWith('/api/reports/ageing'))!.path).toMatch(/^\/api\/reports\/ageing\?companyId=c1&asOn=\d{4}-\d{2}-\d{2}$/);
   });
 
