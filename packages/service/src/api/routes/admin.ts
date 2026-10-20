@@ -9,6 +9,7 @@ import {
   assertCompanyVisible,
   assertRight,
   getRights,
+  getUserAccess,
   setBlockedGroups,
   setHiddenCompanies,
   setRights,
@@ -176,5 +177,11 @@ export function registerAdminRoutes(app: FastifyInstance, deps: AppDeps): void {
     const b = restoreBody.parse(req.body);
     await restoreDatabase(db, cfg, req.actor!, b.adminPassword, b.file);
     return reply.code(204).send();
+  });
+
+  app.get('/api/users/:id/access', async (req) => {
+    const { id } = idParam.parse(req.params);
+    await assertRight(db, req.actor!, 'users', 'find');
+    return getUserAccess(db, id);
   });
 }

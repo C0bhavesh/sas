@@ -153,3 +153,9 @@ export async function assertCompanyVisible(q: Queryable, actor: Actor, companyId
   );
   if (hidden.length > 0) throw new AuthError('FORBIDDEN', 'You do not have access to this company');
 }
+
+export async function getUserAccess(q: Queryable, userId: string): Promise<{ blockedGroupIds: string[]; hiddenCompanyIds: string[] }> {
+  const groups = await q.query<{ group_id: string }>('SELECT group_id FROM user_blocked_groups WHERE user_id = $1', [userId]);
+  const companies = await q.query<{ company_id: string }>('SELECT company_id FROM user_hidden_companies WHERE user_id = $1', [userId]);
+  return { blockedGroupIds: groups.map((g) => g.group_id), hiddenCompanyIds: companies.map((c) => c.company_id) };
+}

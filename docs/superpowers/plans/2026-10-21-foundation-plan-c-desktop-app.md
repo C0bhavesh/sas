@@ -9307,7 +9307,7 @@ describe('UsersScreen', () => {
     const { posts } = setup();
     await screen.findByRole('grid', { name: 'Users' });
     await user.keyboard('{Control>}n{/Control}');
-    await user.type(await screen.findByLabelText('Username'), 'ravi{Enter}secret12{Enter}ravi@x.in{Enter}');
+    await user.type(await screen.findByLabelText('Username'), 'ravi{Enter}secret12{Enter}ravi@x.in');
     await user.click(screen.getByRole('checkbox', { name: 'Administrator' }));
     await user.keyboard('{Control>}s{/Control}');
     expect(await screen.findByRole('status')).toHaveTextContent('User ravi created');

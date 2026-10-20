@@ -189,3 +189,17 @@ describe('backup not configured', () => {
     }
   });
 });
+
+describe('user access', () => {
+  it('reads back blocked groups and hidden companies, for users with the find right only', async () => {
+    const clerk = await f.addUser('clerk');
+    const g42 = (await f.db.query<{ id: string }>('SELECT id FROM account_groups WHERE company_id = $1 AND code = 42', [f.s.companyId]))[0]!.id;
+    await send('PUT', `/api/users/${clerk.id}/blocked-groups`, { groupIds: [g42] });
+    await send('PUT', `/api/users/${clerk.id}/hidden-companies`, { companyIds: [f.s.companyId] });
+    const r = await send('GET', `/api/users/${clerk.id}/access`);
+    expect(r.statusCode).toBe(200);
+    expect(r.json()).toEqual({ blockedGroupIds: [g42], hiddenCompanyIds: [f.s.companyId] });
+    const plain = await f.addUser('plain');
+    expect((await send('GET', `/api/users/${clerk.id}/access`, undefined, plain.token)).statusCode).toBe(403);
+  });
+});

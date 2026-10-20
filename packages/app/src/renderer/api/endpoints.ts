@@ -1,4 +1,4 @@
-import type { Actor } from '@sas/shared';
+import type { Actor, ModuleName, Rights } from '@sas/shared';
 import type { ApiClient } from './client';
 import type {
   BookLite,
@@ -181,3 +181,26 @@ export const ledgerReport = (api: ApiClient, p: { companyId: string; yearId: str
 
 export const cashBookReport = (api: ApiClient, p: { companyId: string; yearId: string; bookId: string; from: string; to: string }) =>
   api.request<CashBookDayDto[]>('GET', `/api/reports/cash-book${queryString(p)}`);
+
+export interface UserRow {
+  id: string;
+  username: string;
+  isAdmin: boolean;
+  status: string;
+  email: string | null;
+}
+export type RightsMap = Record<ModuleName, Rights>;
+export interface UserAccess {
+  blockedGroupIds: string[];
+  hiddenCompanyIds: string[];
+}
+
+export const listUsers = (api: ApiClient) => api.request<UserRow[]>('GET', '/api/users');
+export const createUser = (api: ApiClient, body: { username: string; password: string; isAdmin?: boolean; email?: string; canExportAudit?: boolean }) =>
+  api.request<{ id: string }>('POST', '/api/users', body);
+export const setUserStatus = (api: ApiClient, id: string, status: 'active' | 'blocked') => api.request<void>('PUT', `/api/users/${id}/status`, { status });
+export const getUserRights = (api: ApiClient, id: string) => api.request<RightsMap>('GET', `/api/users/${id}/rights`);
+export const setUserRights = (api: ApiClient, id: string, rights: RightsMap) => api.request<void>('PUT', `/api/users/${id}/rights`, { rights });
+export const getUserAccess = (api: ApiClient, id: string) => api.request<UserAccess>('GET', `/api/users/${id}/access`);
+export const setBlockedGroups = (api: ApiClient, id: string, groupIds: string[]) => api.request<void>('PUT', `/api/users/${id}/blocked-groups`, { groupIds });
+export const setHiddenCompanies = (api: ApiClient, id: string, companyIds: string[]) => api.request<void>('PUT', `/api/users/${id}/hidden-companies`, { companyIds });
