@@ -56,25 +56,25 @@ export function ReportShell({ screenId, title, subtitle, filters, onRun, loading
       <NavRoot className="panel no-print" onLast={onRun}>
         <div className="form-row">{filters}</div>
         <button className="primary" onClick={onRun}>
-          Run <kbd>Ctrl+Enter</kbd>
+          Run
         </button>{' '}
         {shortcuts.includes('print') && (
           <>
             <button onClick={() => window.print()}>
-              Print <kbd>Ctrl+P</kbd>
+              Print
             </button>{' '}
           </>
         )}
         {shortcuts.includes('pdf') && (
           <>
             <button onClick={() => void savePdf()}>
-              PDF <kbd>Ctrl+Shift+P</kbd>
+              PDF
             </button>{' '}
           </>
         )}
         {shortcuts.includes('csv') && (
           <button onClick={() => void saveCsv()}>
-            CSV <kbd>Ctrl+E</kbd>
+            CSV
           </button>
         )}
       </NavRoot>

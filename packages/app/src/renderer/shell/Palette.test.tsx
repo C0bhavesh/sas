@@ -41,8 +41,8 @@ describe('Palette', () => {
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
-  it('shows hotkeys next to the titles', () => {
+  it('does not show shortcut keys (they are only in Help)', () => {
     render(<Palette screens={screens} onPick={() => {}} onClose={() => {}} />);
-    expect(screen.getByRole('option', { name: /Cash \/ Bank Receipt/ })).toHaveTextContent('F4');
+    expect(screen.getByRole('option', { name: /Cash \/ Bank Receipt/ })).not.toHaveTextContent('F4');
   });
 });

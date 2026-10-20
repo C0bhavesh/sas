@@ -152,10 +152,10 @@ export function BillAdjuster(props: {
       {error && <p className="err" role="alert">{error}</p>}
       <p>
         <button onClick={autoFill}>
-          Fill from oldest <kbd>Alt+A</kbd>
+          Fill from oldest
         </button>{' '}
         <button className="primary" onClick={done}>
-          Done <kbd>Ctrl+Enter</kbd>
+          Done
         </button>{' '}
         <button onClick={onCancel}>Cancel</button>
       </p>

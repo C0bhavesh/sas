@@ -63,7 +63,6 @@ export function Palette({ screens, onPick, onClose }: { screens: ScreenDef[]; on
             style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 8px', background: i === active ? '#e5eefb' : undefined, cursor: 'pointer' }}
           >
             <span>{s.title}</span>
-            {s.hotkey && <kbd>{s.hotkey}</kbd>}
           </li>
         ))}
         {items.length === 0 && <li className="muted" style={{ padding: '4px 8px' }}>No screen matches.</li>}

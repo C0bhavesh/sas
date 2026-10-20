@@ -126,7 +126,7 @@ export function NewCompanyForm({
         </p>
       )}
       <button className="primary" onClick={requestSave}>
-        Create company <kbd>Ctrl+S</kbd>
+        Create company
       </button>
     </NavRoot>
   );

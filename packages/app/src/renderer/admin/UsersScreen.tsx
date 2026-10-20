@@ -183,7 +183,7 @@ export function UsersScreen() {
           </label>
           <p>
             <button className="primary" onClick={requestSave}>
-              Create user <kbd>Ctrl+S</kbd>
+              Create user
             </button>
           </p>
         </NavRoot>
@@ -262,7 +262,7 @@ export function UsersScreen() {
 
           {!selected.isAdmin && (
             <button className="primary" onClick={requestSave}>
-              Save <kbd>Ctrl+S</kbd>
+              Save
             </button>
           )}
         </div>

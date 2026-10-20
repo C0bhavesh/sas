@@ -359,7 +359,7 @@ function VoucherEditor(props: { kind: VoucherKind; editId?: string; companyId: s
         )}
         <p>
           <button className="primary" disabled={busy} onClick={requestSave}>
-            {form.editing ? 'Update' : 'Save'} <kbd>Ctrl+S</kbd>
+            {form.editing ? 'Update' : 'Save'}
           </button>
         </p>
       </NavRoot>

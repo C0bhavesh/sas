@@ -1,4 +1,5 @@
-import { useEffect, useRef } from 'react';
+import { useContext, useEffect, useRef } from 'react';
+import { TabActiveContext } from '../shell/nav';
 import { matchesKey } from './keys';
 import type { ShortcutDecl } from './registry';
 
@@ -9,6 +10,8 @@ import type { ShortcutDecl } from './registry';
 export function useShortcuts(decls: ShortcutDecl[], handlers: Record<string, () => void>, enabled = true): void {
   const latest = useRef(handlers);
   latest.current = handlers;
+  const tabActive = useContext(TabActiveContext);
+  enabled = enabled && tabActive;
 
   useEffect(() => {
     if (!enabled) return;

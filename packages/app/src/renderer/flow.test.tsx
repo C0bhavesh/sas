@@ -49,7 +49,7 @@ describe('Login page', () => {
     const user = userEvent.setup();
     renderApp({ routes: testModeRoutes });
     expect(await screen.findByLabelText('Username')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /continue as administrator/i })).toHaveTextContent('F2');
+    expect(screen.getByRole('button', { name: /continue as administrator/i })).not.toHaveTextContent('F2');
     await user.keyboard('{F2}');
     expect(await screen.findByRole('heading', { name: 'Your companies' })).toBeInTheDocument();
   });

@@ -1,11 +1,14 @@
-import { formatKeys } from '../keys/keys';
 import { useSession } from '../session/Session';
-import { OPENERS, SCREEN_BY_ID, type ScreenId } from './screens';
+import { useNav } from './nav';
+import { SCREEN_BY_ID, type ScreenId } from './screens';
 import { canSee } from './visibility';
+
+const QUICK: ScreenId[] = ['receipt', 'payment', 'journal', 'vouchers', 'rLedger', 'rTrial'];
 
 export function Home() {
   const session = useSession();
-  const quick = OPENERS.filter((o) => canSee(SCREEN_BY_ID[o.id.slice(5) as ScreenId], session));
+  const nav = useNav();
+  const quick = QUICK.map((id) => SCREEN_BY_ID[id]).filter((s) => canSee(s, session));
 
   return (
     <div>
@@ -14,17 +17,19 @@ export function Home() {
         <p>
           Working in <strong>{session.company?.name}</strong>, year <strong>{session.year?.label ?? '—'}</strong>.
         </p>
-        <ul>
-          {quick.map((o) => (
-            <li key={o.id}>
-              <kbd>{formatKeys(o.keys)}</kbd> {o.description}
-            </li>
-          ))}
-        </ul>
+        {quick.length > 0 && (
+          <>
+            <h3>Start with</h3>
+            <div className="quick">
+              {quick.map((s) => (
+                <button key={s.id} onClick={() => nav.open(s.id)}>
+                  {s.title}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
       </div>
-      <p className="muted">
-        Press <kbd>F1</kbd> to see every keyboard shortcut, <kbd>F2</kbd> to go to any screen, <kbd>F9</kbd> to go back to the companies.
-      </p>
     </div>
   );
 }

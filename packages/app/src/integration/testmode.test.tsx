@@ -48,9 +48,10 @@ describe('test mode against the real service', () => {
     expect(bar.getByText('2026-27')).toBeInTheDocument();
     expect(bar.getByText(/test mode/i)).toBeInTheDocument();
     // the administrator sees everything
-    const menu = screen.getByRole('navigation', { name: 'Screens' });
-    expect(within(menu).getByRole('button', { name: /Users & Rights/ })).toBeInTheDocument();
-    expect(within(menu).getByRole('button', { name: /Audit Log/ })).toBeInTheDocument();
+    const sections = within(screen.getByRole('tablist', { name: 'Sections' }));
+    await user.hover(sections.getByRole('tab', { name: 'Admin' }));
+    expect(await screen.findByRole('menuitem', { name: 'Users & Rights' })).toBeInTheDocument();
+    expect(screen.getByRole('menuitem', { name: 'Audit Log' })).toBeInTheDocument();
   });
 
   it('shows real year summaries on the years page', async () => {

@@ -99,7 +99,7 @@ export function BookScreen() {
           </p>
         )}
         <button className="primary" onClick={requestSave}>
-          Create book <kbd>Ctrl+S</kbd>
+          Create book
         </button>
       </NavRoot>
       <div className="panel">

@@ -116,7 +116,7 @@ export function OpeningScreen() {
             </p>
           )}
           <button className="primary" onClick={requestSave}>
-            Save <kbd>Ctrl+S</kbd>
+            Save
           </button>
         </NavRoot>
       )}

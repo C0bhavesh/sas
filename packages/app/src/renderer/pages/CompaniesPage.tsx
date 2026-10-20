@@ -94,7 +94,7 @@ export function CompaniesPage() {
           <button className="card card-new" onClick={() => setCreating(true)}>
             <span className="plus">+</span>
             <span>
-              Create company <kbd>N</kbd>
+              Create company
             </span>
           </button>
         )}
@@ -105,9 +105,6 @@ export function CompaniesPage() {
         </p>
       )}
       {companies.length === 0 && !canCreate && <p>No companies are available to you. Ask the administrator.</p>}
-      <p className="hint">
-        <kbd>←</kbd> <kbd>→</kbd> choose · <kbd>Enter</kbd> open{canCreate && (<> · <kbd>N</kbd> new company</>)} · <kbd>F1</kbd> help
-      </p>
     </PageFrame>
   );
 }

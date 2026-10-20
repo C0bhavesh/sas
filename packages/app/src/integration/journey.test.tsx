@@ -68,6 +68,8 @@ describe('the desktop app against the real service', () => {
     await user.keyboard('{Control>}s{/Control}');
     expect(await screen.findByRole('status')).toHaveTextContent('Voucher no. 1 updated');
 
+    // Close the edit and find tabs, then open the ledger report
+    await user.keyboard('{Control>}w{/Control}{Control>}w{/Control}');
     // Ledger report of the cash account: opening 1,000 + receipt 3,000
     await user.keyboard('{F8}');
     await user.click(await screen.findByRole('combobox', { name: 'Account' }));
@@ -102,10 +104,11 @@ describe('the desktop app against the real service', () => {
 
     renderApp({ api: realClient(server.url), bridge: bridge() });
     await signInToHome(user, 'operator', 'operator1');
-    const menu = await screen.findByRole('navigation', { name: 'Screens' });
-    expect(within(menu).getByRole('button', { name: /Cash \/ Bank Receipt/ })).toBeInTheDocument();
-    expect(within(menu).queryByRole('button', { name: /Trial Balance/ })).toBeNull();
-    expect(within(menu).queryByRole('button', { name: /Users & Rights/ })).toBeNull();
+    const sections = within(await screen.findByRole('tablist', { name: 'Sections' }));
+    expect(sections.getAllByRole('tab').map((t) => t.textContent)).toEqual(['Home', 'Vouchers', 'Help']);
+    await user.hover(sections.getByRole('tab', { name: 'Vouchers' }));
+    expect(await screen.findByRole('menuitem', { name: 'Cash / Bank Receipt' })).toBeInTheDocument();
+    expect(screen.queryByRole('menuitem', { name: 'Journal Voucher' })).toBeNull();
 
     // the server, not just the menu, says no
     const operator = realClient(server.url);
@@ -127,6 +130,6 @@ describe('the desktop app against the real service', () => {
     await user.keyboard('{F7}'); // any call now fails with 401
     expect(await screen.findByRole('button', { name: 'Login' })).toBeInTheDocument();
     expect(screen.getByText(/session has ended/i)).toBeInTheDocument();
-    await waitFor(() => expect(screen.queryByRole('navigation', { name: 'Screens' })).toBeNull());
+    await waitFor(() => expect(screen.queryByRole('tablist', { name: 'Sections' })).toBeNull());
   });
 });

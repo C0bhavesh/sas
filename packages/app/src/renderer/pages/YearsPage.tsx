@@ -50,7 +50,11 @@ export function YearsPage() {
 
   return (
     <PageFrame
-      crumb={<span className="crumb">‹ {company.name} <kbd>Esc</kbd></span>}
+      crumb={
+        <button className="link crumb" onClick={session.backToCompanies}>
+          ‹ {company.name}
+        </button>
+      }
       title="Financial years"
       subtitle="Pick a year to open its books."
     >
@@ -84,9 +88,6 @@ export function YearsPage() {
           ]}
         />
       )}
-      <p className="hint">
-        <kbd>↑</kbd> <kbd>↓</kbd> choose · <kbd>Enter</kbd> open year · <kbd>Esc</kbd> back to companies
-      </p>
     </PageFrame>
   );
 }

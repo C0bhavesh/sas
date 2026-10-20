@@ -86,7 +86,7 @@ export function LoginScreen({
         {onTestLogin && (
           <p>
             <button className="dashed" onClick={onTestLogin}>
-              Continue as administrator (test only) <kbd>F2</kbd>
+              Continue as administrator (test only)
             </button>
           </p>
         )}

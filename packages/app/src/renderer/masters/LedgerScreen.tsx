@@ -130,7 +130,7 @@ export function LedgerScreen() {
           </p>
         )}
         <button className="primary" onClick={requestSave}>
-          Create account <kbd>Ctrl+S</kbd>
+          Create account
         </button>{' '}
         <span className="muted">Existing accounts cannot be edited yet.</span>
       </NavRoot>

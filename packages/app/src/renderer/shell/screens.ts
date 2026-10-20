@@ -58,7 +58,7 @@ const NEW_AND_SAVE: ShortcutDecl[] = [{ id: 'new', keys: 'Ctrl+N', description: 
 
 export const SCREENS: ScreenDef[] = [
   { id: 'home', title: 'Home', group: 'General', modules: [], shortcuts: [] },
-  { id: 'help', title: 'Help — keyboard shortcuts', group: 'General', modules: [], shortcuts: [] },
+  { id: 'help', title: 'Help', group: 'General', modules: [], shortcuts: [] },
 
   { id: 'receipt', title: 'Cash / Bank Receipt', group: 'Transactions', modules: ['cash_book'], hotkey: 'F4', shortcuts: VOUCHER_KEYS },
   { id: 'payment', title: 'Cash / Bank Payment', group: 'Transactions', modules: ['cash_book'], hotkey: 'F5', shortcuts: VOUCHER_KEYS },
