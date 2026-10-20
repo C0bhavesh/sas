@@ -1,0 +1,14 @@
+{
+  "name": "@sas/service",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@sas/shared": "*",
+    "pg": "^8.13.1"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.2.17",
+    "@types/pg": "^8.11.10"
+  }
+}

@@ -1738,8 +1738,9 @@ export async function applyLineAdjustments(_tx: Queryable, p: LineAdjustmentPara
 }
 
 /** Undo everything a voucher did to bills and on-account money. (Task 6 implements bills.) */
-export async function removeVoucherBillLinks(_tx: Queryable, _voucherId: string): Promise<void> {
-  return;
+export async function removeVoucherBillLinks(tx: Queryable, voucherId: string): Promise<void> {
+  // A receipt/payment with no bill adjustments writes an on_account row, which must go before the voucher can.
+  await tx.query('DELETE FROM on_account WHERE voucher_id = $1', [voucherId]);
 }
 ```
 
