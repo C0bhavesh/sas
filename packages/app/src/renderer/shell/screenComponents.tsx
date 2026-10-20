@@ -2,6 +2,7 @@ import type { ComponentType } from 'react';
 import { Help } from '../screens/Help';
 import { Home } from './Home';
 import { VoucherEntry } from '../vouchers/VoucherEntry';
+import { VoucherList } from '../vouchers/VoucherList';
 import { SCREENS, type ScreenId } from './screens';
 
 function placeholder(title: string): ComponentType {
@@ -29,4 +30,5 @@ export const SCREEN_COMPONENTS: Record<ScreenId, ComponentType<any>> = {
   receipt: Receipt,
   payment: Payment,
   journal: Journal,
+  vouchers: VoucherList,
 };
