@@ -19,7 +19,10 @@ const check = process.argv.includes('--check');
 const url = `http://127.0.0.1:${PORT}`;
 
 console.log('1/3 Building the desktop app...');
-const build = spawnSync(process.execPath, [join(root, 'node_modules', 'electron-vite', 'bin', 'electron-vite.js'), 'build'], { cwd: appDir, stdio: 'inherit' });
+const fromApp = createRequire(join(appDir, 'package.json'));
+// Resolved from the app package, wherever npm installed it.
+const electronVite = join(dirname(fromApp.resolve('electron-vite/package.json')), 'bin', 'electron-vite.js');
+const build = spawnSync(process.execPath, [electronVite, 'build'], { cwd: appDir, stdio: 'inherit' });
 if (build.status !== 0) process.exit(build.status ?? 1);
 
 const alreadyRunning = await fetch(`${url}/api/health`).then((r) => r.ok, () => false);
@@ -60,7 +63,7 @@ console.log(`    Server address: ${url}  (the default; the app asks if it cannot
 // ELECTRON_RUN_AS_NODE is set by editors such as VS Code; with it set Electron would run as plain Node.
 const env = { ...process.env };
 delete env.ELECTRON_RUN_AS_NODE;
-const electron = createRequire(join(appDir, 'package.json'))('electron');
+const electron = fromApp('electron');
 const app = spawn(electron, ['.', ...(check ? ['--smoke'] : [])], { cwd: appDir, stdio: 'inherit', env });
 
 const stop = () => {

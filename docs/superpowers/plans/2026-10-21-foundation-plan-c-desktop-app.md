@@ -6,7 +6,7 @@
 
 **Architecture:** An Electron app in a new workspace package `@sas/app`. The renderer is React + TypeScript and contains screens only: no accounting logic beyond reusing the pure voucher rules from `@sas/shared` for instant feedback. It talks to the service from Plan B through a small bridge: the renderer calls `window.sas.request(...)`, the Electron main process forwards the call to the configured server over HTTP (so there is no CORS and no network code in the renderer). Every shortcut is declared once, in `screens.ts`; screens bind handlers to those declarations and the Help screen is generated from the same data.
 
-**Tech Stack:** Electron (newest stable at execution time), electron-vite 2, Vite 5, React 18, TypeScript 5, vitest 2 + jsdom + Testing Library for component tests. The service from Plans A and B runs as the back end.
+**Tech Stack:** Electron, electron-vite, Vite, React 18, TypeScript 5, vitest + jsdom + Testing Library for component tests. The service from Plans A and B runs as the back end. As built (2026-10-20): Electron 44.9.1, electron-vite 6, Vite 8, vitest 5, jsdom 29; the plan was first written against Electron 33 / vitest 2, which `npm audit` flags (Electron: high severity).
 
 **Prerequisites:** Plans A and B merged on `main`. `npm test` is green (185 passed, 1 skipped).
 

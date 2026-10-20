@@ -4,7 +4,7 @@
   "private": true,
   "main": "out/main/index.js",
   "scripts": {
-    "dev": "electron-vite dev",
+    "dev": "node scripts/dev.mjs",
     "build": "electron-vite build",
     "preview": "electron-vite preview",
     "smoke": "electron-vite build && node scripts/smoke.mjs"
@@ -20,10 +20,10 @@
     "@testing-library/user-event": "^14.5.2",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
-    "@vitejs/plugin-react": "^4.3.4",
-    "electron": "^33.2.0",
-    "electron-vite": "^2.3.0",
-    "jsdom": "^25.0.1",
-    "vite": "^5.4.11"
+    "@vitejs/plugin-react": "^6.1.2",
+    "electron": "^44.9.1",
+    "electron-vite": "^6.0.0",
+    "jsdom": "^29.1.1",
+    "vite": "^8.3.4"
   }
 }
