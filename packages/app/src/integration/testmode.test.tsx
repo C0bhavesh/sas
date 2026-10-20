@@ -1,4 +1,4 @@
-import { screen, within } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { createCompany, login } from '../renderer/api/endpoints';
@@ -27,22 +27,49 @@ afterAll(async () => {
 });
 
 describe('test mode against the real service', () => {
-  it('opens straight into the app as the administrator, with no sign-in screen', async () => {
+  async function continueAsAdministrator(user: ReturnType<typeof userEvent.setup>) {
     renderApp({ api: realClient(server.url), bridge: createFakeBridge() });
-    const bar = within(await screen.findByRole('banner'));
-    expect(await bar.findByText('Test Textiles')).toBeInTheDocument();
+    // the login page still comes first; the test button gets past it
+    expect(await screen.findByLabelText('Username')).toBeInTheDocument();
+    await user.keyboard('{F2}');
+    await screen.findByRole('heading', { name: 'Your companies' });
+    await user.keyboard('{Enter}');
+    await screen.findByRole('heading', { name: 'Financial years' });
+    await waitFor(() => expect(screen.getByRole('grid', { name: 'Years' })).toHaveFocus());
+    await user.keyboard('{Enter}');
+    await screen.findByRole('heading', { name: /Welcome/ });
+    return within(screen.getByRole('banner'));
+  }
+
+  it('shows the login page first, then companies, years and Home as the administrator', async () => {
+    const user = userEvent.setup();
+    const bar = await continueAsAdministrator(user);
+    expect(await bar.findByText(/Test Textiles/)).toBeInTheDocument();
+    expect(bar.getByText('2026-27')).toBeInTheDocument();
     expect(bar.getByText(/test mode/i)).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Sign in' })).toBeNull();
     // the administrator sees everything
     const menu = screen.getByRole('navigation', { name: 'Screens' });
     expect(within(menu).getByRole('button', { name: /Users & Rights/ })).toBeInTheDocument();
     expect(within(menu).getByRole('button', { name: /Audit Log/ })).toBeInTheDocument();
   });
 
-  it('can be used straight away: a screen works without ever signing in', async () => {
+  it('shows real year summaries on the years page', async () => {
     const user = userEvent.setup();
     renderApp({ api: realClient(server.url), bridge: createFakeBridge() });
-    await screen.findByRole('banner');
+    await screen.findByLabelText('Username');
+    await user.keyboard('{F2}');
+    await screen.findByRole('heading', { name: 'Your companies' });
+    expect(screen.getByRole('option', { name: /Test Textiles/ })).toHaveTextContent('1 financial year');
+    await user.keyboard('{Enter}');
+    const row = (await screen.findAllByRole('row'))[1]!;
+    expect(row).toHaveTextContent('2026-27');
+    expect(row).toHaveTextContent('Open');
+    expect(row).toHaveTextContent('—'); // nothing entered yet
+  });
+
+  it('can be used straight away: a screen works without ever logging in', async () => {
+    const user = userEvent.setup();
+    await continueAsAdministrator(user);
     await user.keyboard('{F2}');
     await user.type(await screen.findByRole('combobox', { name: 'Go to screen' }), 'account master{Enter}');
     expect(await screen.findByRole('heading', { name: 'Account Master' })).toBeInTheDocument();

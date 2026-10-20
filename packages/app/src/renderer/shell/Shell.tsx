@@ -6,7 +6,6 @@ import { NavContext, type NavValue, type ScreenRef } from './nav';
 import { Palette } from './Palette';
 import { SCREEN_COMPONENTS } from './screenComponents';
 import { ALL_GLOBAL, SCREENS, type ScreenGroup, type ScreenId } from './screens';
-import { SwitchDialog } from './SwitchDialog';
 import { canSee } from './visibility';
 
 const GROUP_ORDER: ScreenGroup[] = ['General', 'Transactions', 'Masters', 'Reports', 'Admin'];
@@ -14,7 +13,7 @@ const GROUP_ORDER: ScreenGroup[] = ['General', 'Transactions', 'Masters', 'Repor
 export function Shell() {
   const session = useSession();
   const [stack, setStack] = useState<ScreenRef[]>([{ id: 'home' }]);
-  const [overlay, setOverlay] = useState<null | 'palette' | 'switch'>(null);
+  const [overlay, setOverlay] = useState<null | 'palette'>(null);
   const current = stack[stack.length - 1]!;
 
   const open = useCallback((id: ScreenId, props?: Record<string, unknown>) => {
@@ -38,7 +37,7 @@ export function Shell() {
     help: () => open('help'),
     openScreen: () => setOverlay('palette'),
     openScreenAlt: () => setOverlay('palette'),
-    switchCompany: () => setOverlay('switch'),
+    switchCompany: () => session.backToCompanies(),
     close: () => (overlay ? setOverlay(null) : back()),
     ...openerHandlers,
   });
@@ -52,14 +51,18 @@ export function Shell() {
           <strong>SAS</strong>
           {session.testMode && (
             <span role="status" style={{ background: '#f2b01e', color: '#1b1f24', padding: '1px 8px', borderRadius: 3, fontWeight: 700 }}>
-              TEST MODE — sign-in is off
+              TEST MODE — login is off
             </span>
           )}
-          <span>{session.company?.name ?? 'No company'}</span>
-          <span>{session.year?.label}</span>
+          <button className="link" onClick={session.backToCompanies} title="Change company">
+            {session.company?.name ?? 'No company'}
+          </button>
+          <button className="link" onClick={session.backToYears} title="Change financial year">
+            {session.year?.label}
+          </button>
           <span className="spacer" />
           <span>{session.actor.username}</span>
-          {!session.testMode && <button onClick={session.logout}>Sign out</button>}
+          <button onClick={session.logout}>Logout</button>
         </header>
         <div className="layout">
           <nav className="menu" aria-label="Screens">
@@ -84,10 +87,9 @@ export function Shell() {
           </main>
         </div>
         <footer className="statusbar no-print">
-          <kbd>F1</kbd> Help · <kbd>F2</kbd> Go to screen · <kbd>F9</kbd> Company / year · <kbd>Esc</kbd> Back
+          <kbd>F1</kbd> Help · <kbd>F2</kbd> Go to screen · <kbd>F9</kbd> Companies · <kbd>Esc</kbd> Back
         </footer>
         {overlay === 'palette' && <Palette screens={visible} onPick={open} onClose={() => setOverlay(null)} />}
-        {overlay === 'switch' && <SwitchDialog onClose={() => setOverlay(null)} />}
       </div>
     </NavContext.Provider>
   );

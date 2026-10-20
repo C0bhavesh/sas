@@ -1,11 +1,16 @@
 import { MODULES, NO_RIGHTS, type Actor, type ModuleName, type Rights } from '@sas/shared';
 import { ApiError } from '../api/client';
-import type { BookLite, CompanyLite, GroupLite, LedgerLite, MeResponse, YearLite } from '../api/types';
+import type { BookLite, CompanyLite, GroupLite, LedgerLite, MeResponse, YearLite, YearSummary } from '../api/types';
 import type { FakeRoute } from './fakeClient';
 
-export const COMPANY: CompanyLite = { id: 'c1', code: 'C1', name: 'Test Textiles' };
+export const COMPANY: CompanyLite = { id: 'c1', code: 'C1', name: 'Test Textiles', gstin: '24AAAPL1234C1Z5', yearCount: 2, latestYearStatus: 'open' };
 export const YEAR_2026: YearLite = { id: 'y1', label: '2026-27', startDate: '2026-04-01', endDate: '2027-03-31', status: 'open' };
 export const YEAR_2025: YearLite = { id: 'y0', label: '2025-26', startDate: '2025-04-01', endDate: '2026-03-31', status: 'closed' };
+
+export const YEAR_SUMMARIES: YearSummary[] = [
+  { ...YEAR_2026, voucherCount: 1284, accountCount: 142, lastEntryDate: '2026-10-20' },
+  { ...YEAR_2025, voucherCount: 3906, accountCount: 138, lastEntryDate: '2026-03-31' },
+];
 
 export const ADMIN = { userId: 'u-admin', username: 'boss', isAdmin: true } satisfies Actor;
 export const CLERK = { userId: 'u-clerk', username: 'clerk', isAdmin: false } satisfies Actor;
@@ -67,6 +72,7 @@ export function baseRoutes(opts: { me?: MeResponse; extra?: FakeRoute[] } = {}):
     { method: 'POST', path: '/api/logout', reply: () => undefined },
     { method: 'GET', path: '/api/me', reply: () => me },
     { method: 'GET', path: '/api/companies/c1/years', reply: () => [YEAR_2025, YEAR_2026] },
+    { method: 'GET', path: '/api/companies/c1/year-summaries', reply: () => YEAR_SUMMARIES },
     { method: 'GET', path: '/api/companies/c1/groups', reply: () => GROUPS },
     { method: 'GET', path: '/api/companies/c1/ledgers', reply: () => LEDGERS },
     { method: 'GET', path: '/api/companies/c1/books', reply: () => BOOKS },

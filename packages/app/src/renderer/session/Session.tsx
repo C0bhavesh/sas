@@ -1,8 +1,11 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
 import type { Actor, ModuleName, RightAction, Rights } from '@sas/shared';
 import { listYears, me as fetchMe } from '../api/endpoints';
 import type { CompanyLite, MeResponse, YearLite } from '../api/types';
 import { useDeps } from './deps';
+
+/** Which page the person is on before the working screens: companies, then years, then Home. */
+export type Stage = 'companies' | 'years' | 'home';
 
 export interface SessionValue {
   actor: Actor;
@@ -11,6 +14,14 @@ export interface SessionValue {
   company: CompanyLite | null;
   year: YearLite | null;
   years: YearLite[];
+  stage: Stage;
+  /** Open a company and go to its years page. */
+  enterCompany(id: string): Promise<void>;
+  /** Choose a year and go to Home. */
+  openYear(id: string): void;
+  backToCompanies(): void;
+  backToYears(): void;
+  /** Switch company from inside the app, picking its newest open year. */
   selectCompany(id: string): Promise<void>;
   selectYear(id: string): void;
   refreshCompanies(): Promise<void>;
@@ -44,7 +55,7 @@ export function SessionProvider({ me, onLogout, testMode = false, children }: { 
   const [company, setCompany] = useState<CompanyLite | null>(null);
   const [years, setYears] = useState<YearLite[]>([]);
   const [year, setYear] = useState<YearLite | null>(null);
-  const [ready, setReady] = useState(false);
+  const [yearChosen, setYearChosen] = useState(false);
 
   const loadCompany = useCallback(
     async (c: CompanyLite | null, preferredYearId?: string) => {
@@ -58,25 +69,11 @@ export function SessionProvider({ me, onLogout, testMode = false, children }: { 
       const y = pickYear(ys, preferredYearId);
       setYears(ys);
       setYear(y);
+      setYearChosen(y !== null);
       await bridge.setConfig({ lastCompanyId: c.id, ...(y ? { lastYearId: y.id } : {}) });
     },
     [api, bridge],
   );
-
-  useEffect(() => {
-    let alive = true;
-    void (async () => {
-      const cfg = await bridge.getConfig();
-      const c = me.companies.find((x) => x.id === cfg.lastCompanyId) ?? me.companies[0] ?? null;
-      await loadCompany(c, cfg.lastYearId);
-      if (alive) setReady(true);
-    })();
-    return () => {
-      alive = false;
-    };
-    // Only on first mount: later changes go through selectCompany / selectYear.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const value = useMemo<SessionValue>(
     () => ({
@@ -86,6 +83,31 @@ export function SessionProvider({ me, onLogout, testMode = false, children }: { 
       company,
       year,
       years,
+      stage: !company ? 'companies' : !yearChosen ? 'years' : 'home',
+      async enterCompany(id) {
+        const c = companies.find((x) => x.id === id);
+        if (!c) return;
+        setCompany(c);
+        setYear(null);
+        setYearChosen(false);
+        setYears(await listYears(api, c.id));
+        await bridge.setConfig({ lastCompanyId: c.id });
+      },
+      openYear(id) {
+        const y = years.find((x) => x.id === id);
+        if (!y) return;
+        setYear(y);
+        setYearChosen(true);
+        void bridge.setConfig({ lastYearId: y.id });
+      },
+      backToCompanies() {
+        setCompany(null);
+        setYear(null);
+        setYearChosen(false);
+      },
+      backToYears() {
+        setYearChosen(false);
+      },
       async selectCompany(id) {
         const c = companies.find((x) => x.id === id);
         if (c) await loadCompany(c);
@@ -99,7 +121,6 @@ export function SessionProvider({ me, onLogout, testMode = false, children }: { 
       async refreshCompanies() {
         const fresh = await fetchMe(api);
         setCompanies(fresh.companies);
-        if (!company && fresh.companies[0]) await loadCompany(fresh.companies[0]);
       },
       async reloadYears() {
         if (company) await loadCompany(company, year?.id);
@@ -108,9 +129,8 @@ export function SessionProvider({ me, onLogout, testMode = false, children }: { 
       logout: onLogout,
       testMode,
     }),
-    [me, companies, company, year, years, api, bridge, loadCompany, onLogout, testMode],
+    [me, companies, company, year, years, yearChosen, api, bridge, loadCompany, onLogout, testMode],
   );
 
-  if (!ready) return <p style={{ padding: 16 }}>Loading…</p>;
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;
 }

@@ -1,7 +1,7 @@
 // One command to try the software: builds the desktop app, starts the service with an embedded
 // database, waits until it answers, then opens the app. Closing the app stops the service.
 //
-//   npm run demo            open the app in TEST MODE (no sign-in screen)
+//   npm run demo            open the app in TEST MODE (login page with a test-only F2 button)
 //   npm run demo -- --login open the app with the real sign-in (admin / admin12345)
 //   npm run demo -- --check start everything, confirm the window renders, then exit (used for testing)
 //
@@ -60,7 +60,7 @@ if (alreadyRunning) {
 }
 
 console.log('3/3 Opening the app.');
-console.log(testMode ? '    TEST MODE: no sign-in screen (you act as the administrator). Use  npm run demo -- --login  to try the real sign-in.' : `    Sign in with   username: ${ADMIN_USER}   password: ${ADMIN_PASSWORD}   (created on the first run only)`);
+console.log(testMode ? '    TEST MODE: press F2 on the login page to continue as the administrator. Use  npm run demo -- --login  to try the real sign-in.' : `    Sign in with   username: ${ADMIN_USER}   password: ${ADMIN_PASSWORD}   (created on the first run only)`);
 console.log(`    Server address: ${url}  (the default; the app asks if it cannot connect)`);
 
 // ELECTRON_RUN_AS_NODE is set by editors such as VS Code; with it set Electron would run as plain Node.

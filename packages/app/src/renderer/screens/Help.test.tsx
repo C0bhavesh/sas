@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import { FORM_SHORTCUTS } from '../keys/registry';
-import { ALL_GLOBAL, SCREENS } from '../shell/screens';
+import { ALL_GLOBAL, PAGE_SHORTCUTS, SCREENS } from '../shell/screens';
 import { Help } from './Help';
 
 describe('Help', () => {
@@ -11,6 +11,7 @@ describe('Help', () => {
     const expected: string[] = [
       ...ALL_GLOBAL.map((d) => `global:${d.id}`),
       ...FORM_SHORTCUTS.map((d) => `forms:${d.id}`),
+      ...Object.entries(PAGE_SHORTCUTS).flatMap(([k, items]) => items.map((d) => `page:${k}:${d.id}`)),
       ...SCREENS.flatMap((s) => s.shortcuts.map((d) => `${s.id}:${d.id}`)),
     ];
     const rows = Array.from(container.querySelectorAll('[data-shortcut]')).map((r) => r.getAttribute('data-shortcut'));

@@ -11,6 +11,7 @@ import type {
   VoucherSummary,
   VoucherView,
   YearLite,
+  YearSummary,
 } from './types';
 
 export const health = (api: ApiClient) => api.request<{ ok: boolean; loginRequired?: boolean }>('GET', '/api/health');
@@ -24,6 +25,9 @@ export const me = (api: ApiClient) => api.request<MeResponse>('GET', '/api/me');
 
 export const listYears = (api: ApiClient, companyId: string) =>
   api.request<YearLite[]>('GET', `/api/companies/${companyId}/years`);
+
+export const listYearSummaries = (api: ApiClient, companyId: string) =>
+  api.request<YearSummary[]>('GET', `/api/companies/${companyId}/year-summaries`);
 
 export const listGroups = (api: ApiClient, companyId: string) =>
   api.request<GroupLite[]>('GET', `/api/companies/${companyId}/groups`);
