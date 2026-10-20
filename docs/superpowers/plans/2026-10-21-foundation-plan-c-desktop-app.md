@@ -111,7 +111,7 @@ packages/service/src/...                      small additions in Tasks 11, 14, 1
     "dev": "electron-vite dev",
     "build": "electron-vite build",
     "preview": "electron-vite preview",
-    "smoke": "electron-vite build && electron . --smoke"
+    "smoke": "electron-vite build && node scripts/smoke.mjs"
   },
   "dependencies": {
     "@sas/shared": "*",
@@ -693,6 +693,8 @@ Expected: the app tests PASS (config 5, request 6, App 1); the build writes `pac
 
 Run: `npm run smoke -w @sas/app`
 Expected: output ends with `SMOKE OK` and the exit code is 0. If it prints `SMOKE FAIL: the preload bridge (window.sas) is missing`, check that `out/preload/index.js` exists and that the `preload` path in `main/index.ts` matches it. If Electron cannot open a window at all (no desktop session), note it in the task report and rely on the build plus the component tests.
+
+(Built as: `packages/app/scripts/smoke.mjs` starts Electron through Node with `ELECTRON_RUN_AS_NODE` removed from the environment. Editors such as VS Code set that variable for the programs they start, and with it set Electron runs as plain Node, so `require('electron').app` is undefined and the app dies with "Cannot read properties of undefined (reading 'setPath')". Run the same way, `npm run dev` needs the variable unset too; see the app README.)
 
 - [ ] **Step 7: Commit**
 
@@ -9956,7 +9958,7 @@ describe('backup and restore', () => {
     const { calls, counts } = setup();
     await screen.findByRole('grid', { name: 'Backups' });
     await user.click(screen.getByRole('combobox', { name: 'Backup file' }));
-    await user.keyboard('0003{Enter}'); // sas-20261003-010000.dump
+    await user.keyboard('1003{Enter}'); // sas-20261003-010000.dump
     await user.click(screen.getByRole('button', { name: 'Restore…' }));
     expect(await screen.findByRole('alert')).toHaveTextContent(/enter your password/i);
     await user.type(screen.getByLabelText('Your password'), 'adminpass1');
@@ -9974,7 +9976,7 @@ describe('backup and restore', () => {
     const { counts } = setup({ extra: [{ method: 'POST', path: '/api/restore', reply: () => { throw new ApiError(403, 'FORBIDDEN', 'Wrong administrator password'); } }] });
     await screen.findByRole('grid', { name: 'Backups' });
     await user.click(screen.getByRole('combobox', { name: 'Backup file' }));
-    await user.keyboard('0003{Enter}');
+    await user.keyboard('1003{Enter}');
     await user.type(screen.getByLabelText('Your password'), 'nope');
     await user.click(screen.getByRole('button', { name: 'Restore…' }));
     await user.click(within(await screen.findByRole('dialog', { name: 'Restore backup' })).getByRole('button', { name: 'Restore' }));

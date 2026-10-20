@@ -25,3 +25,7 @@ only meaningful on a real PostgreSQL and are checked separately:
 Both were run on 2026-10-20 against PostgreSQL 17.5 (portable Windows binaries): 20 simultaneous saves received
 numbers 1–20 with no duplicates, and a restore removed a company created after the backup, refused a wrong
 administrator password (403) and left the audit log matching the restored data.
+
+## The desktop app
+
+`packages/app` is the Electron front end. See `packages/app/README.md` for how to run it and the release checklist.

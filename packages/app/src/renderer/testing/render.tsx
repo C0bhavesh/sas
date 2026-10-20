@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react';
 import type { UserEvent } from '@testing-library/user-event';
 import type { ReactElement } from 'react';
 import { App } from '../App';
+import type { ApiClient } from '../api/client';
 import type { MeResponse } from '../api/types';
 import { DepsProvider } from '../session/deps';
 import { LookupsContext, LookupsProvider, type LookupsValue } from '../session/Lookups';
@@ -11,8 +12,9 @@ import { createFakeBridge, type FakeBridge } from './fakeBridge';
 import { createFakeClient, type FakeClient, type FakeRoute } from './fakeClient';
 import { baseRoutes, COMPANY, ME_ADMIN, YEAR_2025, YEAR_2026 } from './sampleData';
 
-export function renderApp(opts: { me?: MeResponse; routes?: FakeRoute[]; bridge?: FakeBridge } = {}) {
-  const api: FakeClient = createFakeClient(baseRoutes({ me: opts.me, extra: opts.routes }));
+export function renderApp(opts: { me?: MeResponse; routes?: FakeRoute[]; bridge?: FakeBridge; api?: ApiClient } = {}) {
+  // A real client can be passed for the integration tests; it has no `calls` log, and those tests do not read one.
+  const api = (opts.api ?? createFakeClient(baseRoutes({ me: opts.me, extra: opts.routes }))) as FakeClient;
   const bridge = opts.bridge ?? createFakeBridge();
   const utils = render(<App deps={{ api, bridge }} />);
   return { api, bridge, ...utils };
