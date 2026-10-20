@@ -136,9 +136,9 @@ export async function setHiddenCompanies(db: Db, userId: string, companyIds: str
 export async function visibleCompanies(
   q: Queryable,
   actor: Actor,
-): Promise<{ id: string; code: string; name: string }[]> {
+): Promise<{ id: string; code: string; name: string; freezeDate: string | null }[]> {
   return q.query(
-    `SELECT id, code, name FROM companies
+    `SELECT id, code, name, freeze_date AS "freezeDate" FROM companies
      WHERE $1::boolean OR id NOT IN (SELECT company_id FROM user_hidden_companies WHERE user_id = $2)
      ORDER BY name`,
     [actor.isAdmin, actor.userId],

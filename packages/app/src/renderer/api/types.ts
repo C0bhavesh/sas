@@ -4,6 +4,7 @@ export interface CompanyLite {
   id: string;
   code: string;
   name: string;
+  freezeDate?: string | null;
 }
 
 export interface YearLite {

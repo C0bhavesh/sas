@@ -6,7 +6,7 @@ import type { Actor } from '@sas/shared';
 import type { Db } from '../db/types';
 import { createUser } from '../security/users';
 import { createTestDb } from '../testing/testDb';
-import { backupDatabase, backupFileName, pruneBackups, restoreDatabase, type BackupConfig, type CommandRunner } from './backup';
+import { backupDatabase, backupFileName, listBackups, pruneBackups, restoreDatabase, type BackupConfig, type CommandRunner } from './backup';
 
 interface Call {
   cmd: string;
@@ -147,5 +147,20 @@ describe('restoreDatabase', () => {
       f,
     ]);
     expect(calls[0]?.env).toEqual({ PGPASSWORD: 's3cret' });
+  });
+});
+
+describe('listBackups', () => {
+  it('lists backup files newest first with their full path, and ignores other files', async () => {
+    await writeFile(join(dir, 'sas-20261001-010000.dump'), 'a');
+    await writeFile(join(dir, 'sas-20261003-010000.dump'), 'bbb');
+    await writeFile(join(dir, 'notes.txt'), 'x');
+    const files = await listBackups(dir);
+    expect(files.map((f) => f.name)).toEqual(['sas-20261003-010000.dump', 'sas-20261001-010000.dump']);
+    expect(files[0]).toMatchObject({ path: join(dir, 'sas-20261003-010000.dump'), size: 3 });
+    expect(new Date(files[0]!.modified).getTime()).not.toBeNaN();
+  });
+  it('is empty for a folder that does not exist', async () => {
+    expect(await listBackups(join(dir, 'nope'))).toEqual([]);
   });
 });

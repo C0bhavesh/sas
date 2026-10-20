@@ -5,7 +5,9 @@ import { BookScreen } from '../masters/BookScreen';
 import { CompanyScreen } from '../masters/CompanyScreen';
 import { LedgerScreen } from '../masters/LedgerScreen';
 import { OpeningScreen } from '../masters/OpeningScreen';
+import { AuditScreen } from '../admin/AuditScreen';
 import { UsersScreen } from '../admin/UsersScreen';
+import { UtilitiesScreen } from '../admin/UtilitiesScreen';
 import { AgeingReport } from '../reports/AgeingReport';
 import { CashBookReport } from '../reports/CashBookReport';
 import { BalanceSheetReport, ProfitLossReport, TrialBalanceReport } from '../reports/FinancialReports';
@@ -51,4 +53,6 @@ export const SCREEN_COMPONENTS: Record<ScreenId, ComponentType<any>> = {
   rBS: BalanceSheetReport,
   rAgeing: AgeingReport,
   users: UsersScreen,
+  utilities: UtilitiesScreen,
+  audit: AuditScreen,
 };

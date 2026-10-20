@@ -145,3 +145,13 @@ describe('getUserAccess', () => {
     expect(await getUserAccess(db, clerk.userId)).toEqual({ blockedGroupIds: [], hiddenCompanyIds: [] });
   });
 });
+
+describe('visibleCompanies', () => {
+  it('includes the freeze date', async () => {
+    await db.query(`UPDATE companies SET freeze_date = '2026-06-30' WHERE id = $1`, [s.companyId]);
+    const rows = await visibleCompanies(db, admin);
+    expect(rows[0]).toMatchObject({ code: 'C1', freezeDate: '2026-06-30' });
+    await db.query('UPDATE companies SET freeze_date = NULL WHERE id = $1', [s.companyId]);
+    expect((await visibleCompanies(db, admin))[0]!.freezeDate).toBeNull();
+  });
+});

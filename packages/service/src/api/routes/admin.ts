@@ -2,7 +2,7 @@ import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { AppError, type ModuleName } from '@sas/shared';
 import { setFreezeDate } from '../../ops/companyAdmin';
-import { backupDatabase, pruneBackups, restoreDatabase, type BackupConfig } from '../../ops/backup';
+import { backupDatabase, listBackups, pruneBackups, restoreDatabase, type BackupConfig } from '../../ops/backup';
 import { closeYear, lockYear, reopenYear } from '../../ops/yearEnd';
 import { exportAudit, writeAudit } from '../../security/audit';
 import {
@@ -183,5 +183,11 @@ export function registerAdminRoutes(app: FastifyInstance, deps: AppDeps): void {
     const { id } = idParam.parse(req.params);
     await assertRight(db, req.actor!, 'users', 'find');
     return getUserAccess(db, id);
+  });
+
+  app.get('/api/backups', async (req) => {
+    const cfg = backupConfig();
+    await assertRight(db, req.actor!, 'utilities', 'find');
+    return listBackups(cfg.dir);
   });
 }

@@ -203,3 +203,31 @@ describe('user access', () => {
     expect((await send('GET', `/api/users/${clerk.id}/access`, undefined, plain.token)).statusCode).toBe(403);
   });
 });
+
+describe('backup list and freeze date in the company list', () => {
+  it('lists the backup files, for users with the utilities find right only', async () => {
+    await send('POST', '/api/backup', {});
+    const r = await send('GET', '/api/backups');
+    expect(r.statusCode).toBe(200);
+    expect(r.json()).toHaveLength(1);
+    expect(r.json()[0].name).toMatch(/^sas-\d{8}-\d{6}\.dump$/);
+    const clerk = await f.addUser('clerk');
+    expect((await send('GET', '/api/backups', undefined, clerk.token)).statusCode).toBe(403);
+  });
+
+  it('shows the freeze date in the company list', async () => {
+    await send('POST', `/api/companies/${f.s.companyId}/freeze`, { date: '2026-06-30' });
+    const r = await send('GET', '/api/companies');
+    expect(r.json()[0]).toMatchObject({ code: 'C1', freezeDate: '2026-06-30' });
+  });
+
+  it('GET /api/backups answers 501 when backup is not configured', async () => {
+    const bare = await setupApi();
+    try {
+      const r = await bare.app.inject({ method: 'GET', url: '/api/backups', headers: bare.auth(bare.adminToken) });
+      expect(r.statusCode).toBe(501);
+    } finally {
+      await bare.close();
+    }
+  });
+});

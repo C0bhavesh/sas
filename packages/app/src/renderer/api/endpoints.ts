@@ -204,3 +204,40 @@ export const setUserRights = (api: ApiClient, id: string, rights: RightsMap) => 
 export const getUserAccess = (api: ApiClient, id: string) => api.request<UserAccess>('GET', `/api/users/${id}/access`);
 export const setBlockedGroups = (api: ApiClient, id: string, groupIds: string[]) => api.request<void>('PUT', `/api/users/${id}/blocked-groups`, { groupIds });
 export const setHiddenCompanies = (api: ApiClient, id: string, companyIds: string[]) => api.request<void>('PUT', `/api/users/${id}/hidden-companies`, { companyIds });
+
+export const setFreeze = (api: ApiClient, companyId: string, date: string | null) =>
+  api.request<void>('POST', `/api/companies/${companyId}/freeze`, { date });
+
+export interface CloseYearResult {
+  nextYearId: string;
+  netProfit: string;
+  carriedLedgers: number;
+  carriedBills: number;
+}
+export const closeYear = (api: ApiClient, yearId: string, body: { companyId: string; next: { label: string; start: string; end: string } }) =>
+  api.request<CloseYearResult>('POST', `/api/years/${yearId}/close`, body);
+export const reopenYear = (api: ApiClient, yearId: string, companyId: string) => api.request<void>('POST', `/api/years/${yearId}/reopen`, { companyId });
+export const lockYear = (api: ApiClient, yearId: string, companyId: string) => api.request<void>('POST', `/api/years/${yearId}/lock`, { companyId });
+
+export interface BackupFile {
+  name: string;
+  path: string;
+  size: number;
+  modified: string;
+}
+export const listBackups = (api: ApiClient) => api.request<BackupFile[]>('GET', '/api/backups');
+export const runBackup = (api: ApiClient) => api.request<{ file: string; removed: string[] }>('POST', '/api/backup', {});
+export const restoreBackup = (api: ApiClient, file: string, adminPassword: string) => api.request<void>('POST', '/api/restore', { file, adminPassword });
+
+export interface AuditRow {
+  at: string;
+  userId: string | null;
+  username: string | null;
+  entity: string;
+  entityId: string | null;
+  action: string;
+  oldValues: unknown;
+  newValues: unknown;
+}
+export const auditLog = (api: ApiClient, p: { companyId: string; from?: string; to?: string; entity?: string }) =>
+  api.request<AuditRow[]>('GET', `/api/audit${queryString({ ...p })}`);

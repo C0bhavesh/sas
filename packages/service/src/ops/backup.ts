@@ -1,5 +1,5 @@
 import { execFile } from 'node:child_process';
-import { access, mkdir, readdir, unlink } from 'node:fs/promises';
+import { access, mkdir, readdir, stat, unlink } from 'node:fs/promises';
 import { join, resolve, sep } from 'node:path';
 import { promisify } from 'node:util';
 import { AppError, AuthError, type Actor } from '@sas/shared';
@@ -135,4 +135,21 @@ export function pgConnFromUrl(url: string): PgConn {
     password: decodeURIComponent(u.password),
     database,
   };
+}
+
+export async function listBackups(dir: string): Promise<{ name: string; path: string; size: number; modified: string }[]> {
+  let names: string[];
+  try {
+    names = (await readdir(dir)).filter((n) => BACKUP_NAME.test(n));
+  } catch {
+    return [];
+  }
+  const files = await Promise.all(
+    names.sort().reverse().map(async (name) => {
+      const path = join(dir, name);
+      const info = await stat(path);
+      return { name, path, size: info.size, modified: info.mtime.toISOString() };
+    }),
+  );
+  return files;
 }
