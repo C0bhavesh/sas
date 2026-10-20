@@ -86,3 +86,30 @@ export async function listOpenings(
   );
   return rows.map((r) => ({ ledgerId: r.ledger_id, ledgerName: r.ledger_name, groupName: r.group_name, amount: r.amount, side: r.side }));
 }
+
+export interface YearSummary {
+  id: string;
+  label: string;
+  startDate: string;
+  endDate: string;
+  status: string;
+  voucherCount: number;
+  accountCount: number;
+  lastEntryDate: string | null;
+}
+
+/** Every year of a company, newest first, with what has been entered in it. One query, not one per year. */
+export async function listYearSummaries(q: Queryable, companyId: string): Promise<YearSummary[]> {
+  return q.query<YearSummary>(
+    `SELECT y.id, y.label, y.start_date AS "startDate", y.end_date AS "endDate", y.status,
+            COALESCE(v.cnt, 0)::int AS "voucherCount",
+            COALESCE(a.cnt, 0)::int AS "accountCount",
+            v.last_date AS "lastEntryDate"
+       FROM financial_years y
+       LEFT JOIN (SELECT year_id, COUNT(*) AS cnt, MAX(voucher_date) AS last_date FROM vouchers WHERE company_id = $1 GROUP BY year_id) v ON v.year_id = y.id
+       LEFT JOIN (SELECT year_id, COUNT(DISTINCT ledger_id) AS cnt FROM ledger_entries WHERE company_id = $1 GROUP BY year_id) a ON a.year_id = y.id
+      WHERE y.company_id = $1
+      ORDER BY y.start_date DESC`,
+    [companyId],
+  );
+}
