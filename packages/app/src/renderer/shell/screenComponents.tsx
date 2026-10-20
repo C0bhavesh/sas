@@ -1,6 +1,10 @@
 import type { ComponentType } from 'react';
 import { Help } from '../screens/Help';
 import { Home } from './Home';
+import { BookScreen } from '../masters/BookScreen';
+import { CompanyScreen } from '../masters/CompanyScreen';
+import { LedgerScreen } from '../masters/LedgerScreen';
+import { OpeningScreen } from '../masters/OpeningScreen';
 import { VoucherEntry } from '../vouchers/VoucherEntry';
 import { VoucherList } from '../vouchers/VoucherList';
 import { SCREENS, type ScreenId } from './screens';
@@ -31,4 +35,8 @@ export const SCREEN_COMPONENTS: Record<ScreenId, ComponentType<any>> = {
   payment: Payment,
   journal: Journal,
   vouchers: VoucherList,
+  company: CompanyScreen,
+  ledgers: LedgerScreen,
+  openings: OpeningScreen,
+  books: BookScreen,
 };

@@ -70,3 +70,45 @@ export const listVouchers = (api: ApiClient, companyId: string, q: VoucherListQu
     'GET',
     `/api/companies/${companyId}/vouchers${queryString({ yearId: q.yearId, bookId: q.bookId, from: q.from, to: q.to, limit: q.limit, offset: q.offset })}`,
   );
+
+export interface NewCompanyBody {
+  code: string;
+  name: string;
+  gstin?: string;
+  pan?: string;
+  stateCode?: string;
+  fyLabel: string;
+  fyStart: string;
+  fyEnd: string;
+}
+export const createCompany = (api: ApiClient, body: NewCompanyBody) =>
+  api.request<{ companyId: string; yearId: string }>('POST', '/api/companies', body);
+
+export interface NewLedgerBody {
+  groupCode: number;
+  name: string;
+  address?: string;
+  city?: string;
+  stateCode?: string;
+  gstin?: string;
+  pan?: string;
+  creditDays?: number;
+}
+export const createLedger = (api: ApiClient, companyId: string, body: NewLedgerBody) =>
+  api.request<{ id: string }>('POST', `/api/companies/${companyId}/ledgers`, body);
+
+export const setOpening = (api: ApiClient, ledgerId: string, body: { yearId: string; amount: string; side: 'Dr' | 'Cr' }) =>
+  api.request<void>('POST', `/api/ledgers/${ledgerId}/opening`, body);
+
+export interface OpeningRow {
+  ledgerId: string;
+  ledgerName: string;
+  groupName: string;
+  amount: string;
+  side: 'Dr' | 'Cr';
+}
+export const listOpenings = (api: ApiClient, companyId: string, yearId: string) =>
+  api.request<OpeningRow[]>('GET', `/api/companies/${companyId}/openings${queryString({ yearId })}`);
+
+export const createBook = (api: ApiClient, companyId: string, body: { code: string; name: string; type: string; defaultLedgerId?: string }) =>
+  api.request<{ id: string }>('POST', `/api/companies/${companyId}/books`, body);
