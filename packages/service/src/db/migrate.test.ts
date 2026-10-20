@@ -41,9 +41,11 @@ describe('migrate', () => {
   });
 
   it('is safe to run twice', async () => {
+    const before = await db.query<{ n: number }>('SELECT count(*)::int AS n FROM schema_migrations');
     await migrate(db);
-    const applied = await db.query<{ n: number }>('SELECT count(*)::int AS n FROM schema_migrations');
-    expect(applied[0]?.n).toBe(1);
+    const after = await db.query<{ n: number }>('SELECT count(*)::int AS n FROM schema_migrations');
+    expect(before[0]?.n).toBeGreaterThanOrEqual(1);
+    expect(after[0]?.n).toBe(before[0]?.n);
   });
 });
 

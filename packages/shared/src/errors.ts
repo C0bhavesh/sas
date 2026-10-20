@@ -30,3 +30,27 @@ export class VoucherError extends Error {
     this.name = 'VoucherError';
   }
 }
+
+export type AuthErrorCode = 'BAD_CREDENTIALS' | 'USER_BLOCKED' | 'NOT_AUTHENTICATED' | 'FORBIDDEN';
+
+export class AuthError extends Error {
+  constructor(
+    public readonly code: AuthErrorCode,
+    message: string,
+  ) {
+    super(message);
+    this.name = 'AuthError';
+  }
+}
+
+export type AppErrorCode = 'NOT_FOUND' | 'INVALID_INPUT' | 'YEAR_BAD_STATE' | 'BACKUP_FAILED' | 'NOT_CONFIGURED';
+
+export class AppError extends Error {
+  constructor(
+    public readonly code: AppErrorCode,
+    message: string,
+  ) {
+    super(message);
+    this.name = 'AppError';
+  }
+}
