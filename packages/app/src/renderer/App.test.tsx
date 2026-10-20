@@ -65,6 +65,9 @@ describe('App start-up and login', () => {
       ],
     });
     expect(await screen.findByText('Cannot reach the server.')).toBeInTheDocument();
+    // and it says what to check, in plain words
+    expect(screen.getByText(/running on the office server computer/i)).toBeInTheDocument();
+    expect(screen.getByText(/usually http:\/\/127\.0\.0\.1:4100/i)).toBeInTheDocument();
     const address = screen.getByLabelText('Server address');
     await user.clear(address);
     await user.type(address, 'http://192.168.1.10:4100{Enter}');

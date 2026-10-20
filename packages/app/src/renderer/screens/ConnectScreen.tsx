@@ -28,6 +28,10 @@ export function ConnectScreen({ error, onRetry }: { error: string; onRetry: () =
       <div className="dialog" role="dialog" aria-label="Connect to the server">
         <h1>SAS</h1>
         <p role="status">{error || 'Enter the address of the SAS server.'}</p>
+        <ul className="muted">
+          <li>Check that the SAS service is running on the office server computer.</li>
+          <li>Check the address below. On the server computer itself it is usually http://127.0.0.1:4100; from another computer use the server&apos;s name or IP address, for example http://192.168.1.10:4100.</li>
+        </ul>
         <NavRoot onLast={save}>
           <Field label="Server address">
             <input aria-label="Server address" data-nav autoFocus value={url} onChange={(e) => setUrl(e.target.value)} style={{ width: 360 }} />
