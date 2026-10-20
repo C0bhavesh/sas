@@ -3579,7 +3579,7 @@ describe('Lookup', () => {
   it('filters while typing and shows the details', async () => {
     const user = userEvent.setup();
     render(<Harness />);
-    await user.type(screen.getByRole('combobox', { name: 'Account' }), 'sur');
+    await user.type(screen.getByRole('combobox', { name: 'Account' }), 'sures'); // 'sur' would also match the two Surat parties by city
     const options = screen.getAllByRole('option');
     expect(options.map((o) => o.textContent)).toEqual([expect.stringContaining('Suresh Textiles')]);
   });
@@ -3765,7 +3765,8 @@ export function clampToYear(iso: string, start: string, end: string): string {
  */
 export function parseDateInput(text: string, ctx: DateCtx): string | null {
   const t = text.trim();
-  if (t === '' || /[^0-9\s/.\-]/.test(t)) return null;
+  // Only digits and the separators / . - are allowed, and a separator at either end is a typo, not a date.
+  if (t === '' || /[^0-9\s/.\-]/.test(t) || /^[/.\-]|[/.\-]$/.test(t)) return null;
 
   let d: number;
   let m: number | undefined;
