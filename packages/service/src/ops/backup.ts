@@ -122,3 +122,17 @@ export async function restoreDatabase(
     throw new AppError('BACKUP_FAILED', `Restore failed: ${(e as Error).message}`);
   }
 }
+
+/** postgres://user:pass@host:port/dbname -> connection parts. */
+export function pgConnFromUrl(url: string): PgConn {
+  const u = new URL(url);
+  const database = u.pathname.replace(/^\//, '');
+  if (!database) throw new AppError('INVALID_INPUT', 'The database URL has no database name');
+  return {
+    host: u.hostname,
+    port: u.port ? Number(u.port) : 5432,
+    user: decodeURIComponent(u.username),
+    password: decodeURIComponent(u.password),
+    database,
+  };
+}

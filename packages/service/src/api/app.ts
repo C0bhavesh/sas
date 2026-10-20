@@ -2,7 +2,10 @@ import Fastify, { type FastifyInstance } from 'fastify';
 import { ZodError } from 'zod';
 import { AppError, AuthError, VoucherError } from '@sas/shared';
 import { authenticate } from '../security/users';
+import { registerAdminRoutes } from './routes/admin';
 import { registerAuthRoutes } from './routes/auth';
+import { registerMasterRoutes } from './routes/masters';
+import { registerReportRoutes } from './routes/reports';
 import { registerVoucherRoutes } from './routes/vouchers';
 import { bearerToken, type AppDeps } from './types';
 
@@ -52,5 +55,8 @@ export function buildApp(deps: AppDeps): FastifyInstance {
 
   registerAuthRoutes(app, deps);
   registerVoucherRoutes(app, deps);
+  registerMasterRoutes(app, deps);
+  registerReportRoutes(app, deps);
+  registerAdminRoutes(app, deps);
   return app;
 }

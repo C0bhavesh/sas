@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import type { Side } from '@sas/shared';
-import { toPaise, fromPaise } from '@sas/shared';
+import { AppError, toPaise, fromPaise } from '@sas/shared';
 import type { Queryable } from '../db/types';
 
 export interface NewLedger {
@@ -22,7 +22,7 @@ export async function createLedger(q: Queryable, input: NewLedger): Promise<stri
     input.groupCode,
   ]);
   const group = groups[0];
-  if (!group) throw new Error(`Unknown account group ${input.groupCode}`);
+  if (!group) throw new AppError('INVALID_INPUT', `Unknown account group ${input.groupCode}`);
   const id = randomUUID();
   await q.query(
     `INSERT INTO ledgers(id, company_id, group_id, code, name, address, city, state_code, gstin, pan, credit_days)

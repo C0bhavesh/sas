@@ -2,10 +2,13 @@
   "name": "sas",
   "private": true,
   "type": "module",
-  "workspaces": ["packages/*"],
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
     "test": "vitest run",
-    "typecheck": "tsc --noEmit -p packages/shared && tsc --noEmit -p packages/service"
+    "typecheck": "tsc --noEmit -p packages/shared && tsc --noEmit -p packages/service",
+    "start:service": "npm run start -w @sas/service"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",
