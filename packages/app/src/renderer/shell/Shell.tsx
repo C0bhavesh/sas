@@ -75,7 +75,7 @@ export function Shell() {
             })}
           </nav>
           <main className="main">
-            <Screen {...(current.props ?? {})} />
+            <Screen key={`${current.id}:${current.props ? JSON.stringify(current.props) : ''}`} {...(current.props ?? {})} />
           </main>
         </div>
         <footer className="statusbar no-print">

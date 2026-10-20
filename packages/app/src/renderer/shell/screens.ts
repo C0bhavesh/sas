@@ -36,7 +36,7 @@ export interface ScreenDef {
   shortcuts: ShortcutDecl[];
 }
 
-const VOUCHER_KEYS: ShortcutDecl[] = [
+export const VOUCHER_KEYS: ShortcutDecl[] = [
   { id: 'save', keys: 'Ctrl+S', description: 'Save the voucher' },
   { id: 'bills', keys: 'Ctrl+B', description: 'Adjust bills against the current line' },
   { id: 'deleteLine', keys: 'Ctrl+Del', description: 'Delete the current line' },

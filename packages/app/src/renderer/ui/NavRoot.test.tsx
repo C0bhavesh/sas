@@ -43,6 +43,24 @@ describe('NavRoot', () => {
     expect(onLast).toHaveBeenCalledTimes(1);
   });
 
+  it('leaves Ctrl+Enter and Alt+Enter to the screen\'s own shortcuts', async () => {
+    const user = userEvent.setup();
+    const onLast = vi.fn();
+    const seen: boolean[] = [];
+    render(
+      <div onKeyDown={(e) => e.key === 'Enter' && seen.push(e.defaultPrevented)}>
+        <Form onLast={onLast} />
+      </div>,
+    );
+    await user.click(screen.getByLabelText('one'));
+    await user.keyboard('{Control>}{Enter}{/Control}');
+    expect(screen.getByLabelText('one')).toHaveFocus(); // did not move on
+    await user.keyboard('{Alt>}{Enter}{/Alt}');
+    expect(screen.getByLabelText('one')).toHaveFocus();
+    expect(seen).toEqual([false, false]); // and did not claim the key, so window shortcuts still see it
+    expect(onLast).not.toHaveBeenCalled();
+  });
+
   it('ignores an Enter that something else already handled', async () => {
     const user = userEvent.setup();
     const onLast = vi.fn();

@@ -20,7 +20,8 @@ export function focusNextNav(from: HTMLElement): boolean {
 /** Makes Enter act like Tab inside a form. On the very last field it calls `onLast` instead. */
 export function NavRoot({ onLast, children, className }: { onLast?: () => void; children: ReactNode; className?: string }) {
   function onKeyDown(e: KeyboardEvent<HTMLDivElement>) {
-    if (e.key !== 'Enter' || e.defaultPrevented) return;
+    // Only a plain Enter moves on; Ctrl+Enter and friends belong to the screen's own shortcuts.
+    if (e.key !== 'Enter' || e.ctrlKey || e.altKey || e.metaKey || e.defaultPrevented) return;
     const target = e.target as HTMLElement;
     if (!target.hasAttribute('data-nav') || target.tagName === 'TEXTAREA') return;
     e.preventDefault();
