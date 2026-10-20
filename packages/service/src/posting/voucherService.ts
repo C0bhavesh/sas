@@ -9,6 +9,7 @@ import {
 } from '@sas/shared';
 import type { Db, Queryable } from '../db/types';
 import { applyLineAdjustments, removeVoucherBillLinks } from '../outstanding/billService';
+import { writeAudit } from '../security/audit';
 import { nextNumber } from './numbering';
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
@@ -166,6 +167,27 @@ async function lockVoucher(tx: Queryable, voucherId: string, expectedVersion: nu
   return v;
 }
 
+/** The voucher as the audit log stores it. */
+async function snapshot(tx: Queryable, voucherId: string) {
+  const header = (
+    await tx.query<{ voucher_no: number; voucher_date: string; kind: string; narration: string | null }>(
+      'SELECT voucher_no, voucher_date, kind, narration FROM vouchers WHERE id = $1',
+      [voucherId],
+    )
+  )[0]!;
+  const lines = await tx.query<{ ledger_id: string; debit: string; credit: string }>(
+    'SELECT ledger_id, debit, credit FROM voucher_lines WHERE voucher_id = $1 ORDER BY line_no',
+    [voucherId],
+  );
+  return {
+    voucherNo: header.voucher_no,
+    date: header.voucher_date,
+    kind: header.kind,
+    narration: header.narration,
+    lines: lines.map((l) => ({ ledgerId: l.ledger_id, debit: l.debit, credit: l.credit })),
+  };
+}
+
 export async function saveVoucher(db: Db, input: SaveVoucherInput): Promise<{ voucherId: string; voucherNo: number }> {
   return db.transaction(async (tx) => {
     await assertPostable(tx, input.companyId, input.yearId, input.date);
@@ -196,6 +218,14 @@ export async function saveVoucher(db: Db, input: SaveVoucherInput): Promise<{ vo
       bookLedgerId,
       lines: input.lines,
     });
+    await writeAudit(tx, {
+      userId: input.actorId,
+      companyId: input.companyId,
+      entity: 'voucher',
+      entityId: voucherId,
+      action: 'add',
+      newValues: await snapshot(tx, voucherId),
+    });
     return { voucherId, voucherNo };
   });
 }
@@ -211,6 +241,7 @@ export async function updateVoucher(
     await assertPostable(tx, v.company_id, v.year_id, v.voucher_date);
     await assertPostable(tx, v.company_id, v.year_id, patch.date);
     const bookLedgerId = await loadBookLedger(tx, v.company_id, v.book_id, v.kind);
+    const before = await snapshot(tx, voucherId);
     await clearBody(tx, voucherId);
     await writeBody(tx, {
       voucherId,
@@ -226,6 +257,15 @@ export async function updateVoucher(
          modified_by = $4, modified_at = now() WHERE id = $1`,
       [voucherId, patch.date, patch.narration ?? null, patch.actorId],
     );
+    await writeAudit(tx, {
+      userId: patch.actorId,
+      companyId: v.company_id,
+      entity: 'voucher',
+      entityId: voucherId,
+      action: 'edit',
+      oldValues: before,
+      newValues: await snapshot(tx, voucherId),
+    });
     return { version: expectedVersion + 1 };
   });
 }
@@ -234,12 +274,21 @@ export async function deleteVoucher(
   db: Db,
   voucherId: string,
   expectedVersion: number,
-  _actorId: string | null,
+  actorId: string | null,
 ): Promise<void> {
   await db.transaction(async (tx) => {
     const v = await lockVoucher(tx, voucherId, expectedVersion);
     await assertPostable(tx, v.company_id, v.year_id, v.voucher_date);
+    const before = await snapshot(tx, voucherId);
     await clearBody(tx, voucherId);
     await tx.query('DELETE FROM vouchers WHERE id = $1', [voucherId]);
+    await writeAudit(tx, {
+      userId: actorId,
+      companyId: v.company_id,
+      entity: 'voucher',
+      entityId: voucherId,
+      action: 'delete',
+      oldValues: before,
+    });
   });
 }
