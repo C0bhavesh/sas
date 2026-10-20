@@ -5,6 +5,7 @@ import type { MeResponse } from './api/types';
 import { ConnectScreen } from './screens/ConnectScreen';
 import { LoginScreen } from './screens/LoginScreen';
 import { DepsProvider, useDeps, type AppDeps } from './session/deps';
+import { LookupsProvider } from './session/Lookups';
 import { SessionProvider } from './session/Session';
 import { Shell } from './shell/Shell';
 
@@ -72,7 +73,9 @@ function AppInner() {
     case 'ready':
       return (
         <SessionProvider me={phase.me} onLogout={() => void signOut()}>
-          <Shell />
+          <LookupsProvider>
+            <Shell />
+          </LookupsProvider>
         </SessionProvider>
       );
   }
