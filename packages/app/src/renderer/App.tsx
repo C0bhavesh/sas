@@ -6,17 +6,27 @@ import { ConnectScreen } from './screens/ConnectScreen';
 import { LoginScreen } from './screens/LoginScreen';
 import { DepsProvider, useDeps, type AppDeps } from './session/deps';
 import { LookupsProvider } from './session/Lookups';
-import { SessionProvider } from './session/Session';
+import { SessionProvider, useSession } from './session/Session';
+import { CompaniesPage } from './pages/CompaniesPage';
+import { YearsPage } from './pages/YearsPage';
 import { Shell } from './shell/Shell';
 
 type Phase =
   | { name: 'checking' }
   | { name: 'connect'; error: string }
-  | { name: 'login'; notice?: string }
+  | { name: 'login'; notice?: string; testLogin?: boolean }
   | { name: 'ready'; me: MeResponse; testMode?: boolean };
 
 function defaultDeps(): AppDeps {
   return { api: createBridgeClient(window.sas), bridge: window.sas };
+}
+
+/** Companies, then years, then the working screens. */
+function Gate() {
+  const { stage } = useSession();
+  if (stage === 'companies') return <CompaniesPage />;
+  if (stage === 'years') return <YearsPage />;
+  return <Shell />;
 }
 
 function AppInner() {
@@ -27,16 +37,8 @@ function AppInner() {
     setPhase({ name: 'checking' });
     try {
       const h = await health(api);
-      if (h.loginRequired === false) {
-        // The server is in test mode: it signs everyone in as the administrator.
-        try {
-          setPhase({ name: 'ready', me: await me(api), testMode: true });
-          return;
-        } catch {
-          /* no test user to offer: use the normal sign-in screen */
-        }
-      }
-      setPhase({ name: 'login' });
+      // In test mode the server needs no password, but the login page still comes first.
+      setPhase({ name: 'login', testLogin: h.loginRequired === false });
     } catch (e) {
       setPhase({ name: 'connect', error: e instanceof ApiError ? e.message : String(e) });
     }
@@ -49,7 +51,7 @@ function AppInner() {
   useEffect(() => {
     api.onUnauthorized = () => {
       api.setToken(null);
-      setPhase((p) => (p.name === 'ready' ? { name: 'login', notice: 'Your session has ended. Please sign in again.' } : p));
+      setPhase((p) => (p.name === 'ready' ? { name: 'login', notice: 'Your session has ended. Please login again.', testLogin: p.testMode } : p));
     };
     return () => {
       api.onUnauthorized = null;
@@ -62,6 +64,14 @@ function AppInner() {
     setPhase({ name: 'ready', me: await me(api) });
   }
 
+  async function testLogin() {
+    try {
+      setPhase({ name: 'ready', me: await me(api), testMode: true });
+    } catch (e) {
+      setPhase({ name: 'login', notice: e instanceof Error ? e.message : String(e), testLogin: false });
+    }
+  }
+
   async function signOut() {
     try {
       await logout(api);
@@ -69,7 +79,7 @@ function AppInner() {
       /* the token may already be gone */
     }
     api.setToken(null);
-    setPhase({ name: 'login' });
+    await check();
   }
 
   switch (phase.name) {
@@ -78,12 +88,19 @@ function AppInner() {
     case 'connect':
       return <ConnectScreen error={phase.error} onRetry={() => void check()} />;
     case 'login':
-      return <LoginScreen notice={phase.notice} onSubmit={signIn} onChangeServer={() => setPhase({ name: 'connect', error: '' })} />;
+      return (
+        <LoginScreen
+          notice={phase.notice}
+          onSubmit={signIn}
+          onTestLogin={phase.testLogin ? () => void testLogin() : undefined}
+          onChangeServer={() => setPhase({ name: 'connect', error: '' })}
+        />
+      );
     case 'ready':
       return (
         <SessionProvider me={phase.me} testMode={phase.testMode} onLogout={() => void signOut()}>
           <LookupsProvider>
-            <Shell />
+            <Gate />
           </LookupsProvider>
         </SessionProvider>
       );

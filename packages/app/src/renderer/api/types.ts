@@ -5,6 +5,9 @@ export interface CompanyLite {
   code: string;
   name: string;
   freezeDate?: string | null;
+  gstin?: string | null;
+  yearCount?: number;
+  latestYearStatus?: string | null;
 }
 
 export interface YearLite {
@@ -13,6 +16,12 @@ export interface YearLite {
   startDate: string;
   endDate: string;
   status: string;
+}
+
+export interface YearSummary extends YearLite {
+  voucherCount: number;
+  accountCount: number;
+  lastEntryDate: string | null;
 }
 
 export interface GroupLite {

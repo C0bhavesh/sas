@@ -111,4 +111,32 @@ export const OPENERS: ShortcutDecl[] = SCREENS.filter((s) => s.hotkey).map((s) =
   description: `Open ${s.title}`,
 }));
 
+/** Shortcuts of the pages that come before Home. They are not menu screens, but Help lists them. */
+export const PAGE_SHORTCUTS = {
+  login: [
+    { id: 'testLogin', keys: 'F2', description: 'Testing only: continue as the administrator without a password' },
+  ],
+  companies: [
+    { id: 'choose', keys: 'Right', description: 'Choose the next company (Left chooses the previous one)' },
+    { id: 'open', keys: 'Enter', description: 'Open the highlighted company' },
+    { id: 'newCompany', keys: 'N', description: 'Create a new company' },
+  ],
+  newCompany: [
+    { id: 'save', keys: 'Ctrl+S', description: 'Create the company' },
+    { id: 'cancel', keys: 'Esc', description: 'Leave without creating a company' },
+  ],
+  years: [
+    { id: 'choose', keys: 'Down', description: 'Choose the next year (Up chooses the previous one)' },
+    { id: 'open', keys: 'Enter', description: 'Open the highlighted year' },
+    { id: 'back', keys: 'Esc', description: 'Back to the companies' },
+  ],
+} satisfies Record<string, ShortcutDecl[]>;
+
+export const PAGE_TITLES: Record<keyof typeof PAGE_SHORTCUTS, string> = {
+  login: 'Login page',
+  companies: 'Companies page',
+  newCompany: 'New company page',
+  years: 'Years page',
+};
+
 export const ALL_GLOBAL: ShortcutDecl[] = [...GLOBAL_SHORTCUTS, ...OPENERS];

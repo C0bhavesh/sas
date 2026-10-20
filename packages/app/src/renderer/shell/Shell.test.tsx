@@ -1,13 +1,13 @@
 import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
-import { renderApp, signIn } from '../testing/render';
-import { ME_CLERK, rightsFor, ADMIN } from '../testing/sampleData';
+import { renderApp, signInToHome } from '../testing/render';
+import { ME_CLERK } from '../testing/sampleData';
 
 async function openShell(opts: Parameters<typeof renderApp>[0] = {}) {
   const user = userEvent.setup();
   const utils = renderApp(opts);
-  await signIn(user, opts.me?.actor.username ?? 'boss');
+  await signInToHome(user, opts.me?.actor.username ?? 'boss');
   await screen.findByRole('navigation', { name: 'Screens' });
   return { user, ...utils };
 }
@@ -82,25 +82,5 @@ describe('Shell keyboard', () => {
     expect(await screen.findByRole('heading', { name: 'Cash / Bank Receipt' })).toBeInTheDocument();
     await user.keyboard('{Escape}{Escape}{Escape}');
     expect(await screen.findByRole('heading', { name: /Welcome/ })).toBeInTheDocument();
-  });
-
-  it('F9 switches the financial year', async () => {
-    const { user } = await openShell();
-    await user.keyboard('{F9}');
-    const year = await screen.findByLabelText('Financial year');
-    await user.selectOptions(year, 'y0');
-    await user.keyboard('{Escape}');
-    expect(within(await screen.findByRole('banner')).getByText('2025-26')).toBeInTheDocument();
-  });
-});
-
-describe('Home', () => {
-  it('invites an administrator to create the first company', async () => {
-    const user = userEvent.setup();
-    renderApp({ me: { actor: ADMIN, rights: rightsFor(), companies: [] } });
-    await signIn(user);
-    expect(await screen.findByText(/no company yet/i)).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Create a company' }));
-    expect(await screen.findByRole('heading', { name: 'Company & Years' })).toBeInTheDocument();
   });
 });

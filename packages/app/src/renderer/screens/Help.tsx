@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { formatKeys } from '../keys/keys';
 import { FORM_SHORTCUTS, type ShortcutDecl } from '../keys/registry';
-import { ALL_GLOBAL, SCREENS } from '../shell/screens';
+import { ALL_GLOBAL, PAGE_SHORTCUTS, PAGE_TITLES, SCREENS } from '../shell/screens';
 
 interface Section {
   scope: string;
@@ -17,6 +17,7 @@ export function Help() {
   const sections: Section[] = [
     { scope: 'global', title: 'Everywhere', items: ALL_GLOBAL },
     { scope: 'forms', title: 'Typing in forms', items: FORM_SHORTCUTS },
+    ...(Object.keys(PAGE_SHORTCUTS) as (keyof typeof PAGE_SHORTCUTS)[]).map((k) => ({ scope: `page:${k}`, title: PAGE_TITLES[k], items: PAGE_SHORTCUTS[k] })),
     ...SCREENS.filter((s) => s.shortcuts.length > 0).map((s) => ({ scope: s.id, title: s.title, items: s.shortcuts })),
   ];
 

@@ -11,7 +11,7 @@ export const GLOBAL_SHORTCUTS: ShortcutDecl[] = [
   { id: 'help', keys: 'F1', description: 'Open this list of keyboard shortcuts' },
   { id: 'openScreen', keys: 'F2', description: 'Go to any screen: type part of its name and press Enter' },
   { id: 'openScreenAlt', keys: 'Ctrl+K', description: 'Same as F2: go to any screen by name' },
-  { id: 'switchCompany', keys: 'F9', description: 'Switch company or financial year' },
+  { id: 'switchCompany', keys: 'F9', description: 'Back to the list of companies (then the financial years)' },
   { id: 'close', keys: 'Esc', description: 'Close the open list or dialog, or go back to the previous screen' },
 ];
 

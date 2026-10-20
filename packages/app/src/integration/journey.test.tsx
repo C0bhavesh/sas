@@ -4,7 +4,7 @@ import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { createBook, createCompany, createLedger, createUser, listYears, login, me, setOpening, setUserRights } from '../renderer/api/endpoints';
 import type { ApiClient } from '../renderer/api/client';
 import { createFakeBridge } from '../renderer/testing/fakeBridge';
-import { renderApp, signIn } from '../renderer/testing/render';
+import { renderApp, signInToHome } from '../renderer/testing/render';
 import { rightsFor } from '../renderer/testing/sampleData';
 import { realClient, startServer, type RunningServer } from './realServer';
 
@@ -41,7 +41,7 @@ describe('the desktop app against the real service', () => {
   it('signs in, enters a receipt with Gujarati account name, finds it, edits it and sees it in the ledger', async () => {
     const user = userEvent.setup();
     renderApp({ api: realClient(server.url), bridge: bridge() });
-    await signIn(user, 'admin', server.adminPassword);
+    await signInToHome(user, 'admin', server.adminPassword);
     await screen.findByRole('banner');
 
     // Receipt: F4, date, account, amount
@@ -84,7 +84,7 @@ describe('the desktop app against the real service', () => {
   it('refuses an unbalanced journal on the screen before anything is sent', async () => {
     const user = userEvent.setup();
     renderApp({ api: realClient(server.url), bridge: bridge() });
-    await signIn(user, 'admin', server.adminPassword);
+    await signInToHome(user, 'admin', server.adminPassword);
     await screen.findByRole('banner');
     await user.keyboard('{F6}');
     await screen.findByRole('combobox', { name: 'Book' });
@@ -101,7 +101,7 @@ describe('the desktop app against the real service', () => {
     await setUserRights(admin, id, rightsFor({ cash_book: { show: true, find: true, add: true }, reports: {} }));
 
     renderApp({ api: realClient(server.url), bridge: bridge() });
-    await signIn(user, 'operator', 'operator1');
+    await signInToHome(user, 'operator', 'operator1');
     const menu = await screen.findByRole('navigation', { name: 'Screens' });
     expect(within(menu).getByRole('button', { name: /Cash \/ Bank Receipt/ })).toBeInTheDocument();
     expect(within(menu).queryByRole('button', { name: /Trial Balance/ })).toBeNull();
@@ -121,11 +121,11 @@ describe('the desktop app against the real service', () => {
     const user = userEvent.setup();
     const api = realClient(server.url);
     renderApp({ api, bridge: bridge() });
-    await signIn(user, 'admin', server.adminPassword);
+    await signInToHome(user, 'admin', server.adminPassword);
     await screen.findByRole('banner');
     api.setToken('a-token-the-server-does-not-know');
     await user.keyboard('{F7}'); // any call now fails with 401
-    expect(await screen.findByRole('button', { name: 'Sign in' })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: 'Login' })).toBeInTheDocument();
     expect(screen.getByText(/session has ended/i)).toBeInTheDocument();
     await waitFor(() => expect(screen.queryByRole('navigation', { name: 'Screens' })).toBeNull());
   });

@@ -3,20 +3,20 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import { ApiError } from './api/client';
 import { createFakeBridge } from './testing/fakeBridge';
-import { renderApp, signIn } from './testing/render';
+import { renderApp, signIn, signInToHome } from './testing/render';
 import { ME_CLERK } from './testing/sampleData';
 
 describe('App start-up and login', () => {
   it('shows the login screen when the server answers', async () => {
     renderApp();
-    expect(await screen.findByRole('button', { name: 'Sign in' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'SAS' })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: 'Login' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Login' })).toBeInTheDocument();
   });
 
   it('asks for both fields before calling the server', async () => {
     const user = userEvent.setup();
     const { api } = renderApp();
-    await user.click(await screen.findByRole('button', { name: 'Sign in' }));
+    await user.click(await screen.findByRole('button', { name: 'Login' }));
     expect(screen.getByRole('alert')).toHaveTextContent(/enter your username and password/i);
     expect(api.calls.some((c) => c.path === '/api/login')).toBe(false);
   });
@@ -26,13 +26,13 @@ describe('App start-up and login', () => {
     renderApp();
     await signIn(user, 'boss', 'wrong');
     expect(await screen.findByRole('alert')).toHaveTextContent('Wrong username or password');
-    expect(screen.getByRole('button', { name: 'Sign in' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Login' })).toBeInTheDocument();
   });
 
   it('signs in with the keyboard and shows the company and year', async () => {
     const user = userEvent.setup();
     const { bridge } = renderApp();
-    await signIn(user);
+    await signInToHome(user);
     const bar = within(await screen.findByRole('banner'));
     expect(bar.getByText('Test Textiles')).toBeInTheDocument();
     expect(bar.getByText('2026-27')).toBeInTheDocument(); // the open year is chosen
@@ -40,10 +40,10 @@ describe('App start-up and login', () => {
     expect(bridge.config.lastYearId).toBe('y1');
   });
 
-  it('opens the year it remembered', async () => {
+  it('opens the year it remembered, once chosen', async () => {
     const user = userEvent.setup();
     renderApp({ bridge: createFakeBridge({ lastCompanyId: 'c1', lastYearId: 'y0' }) });
-    await signIn(user);
+    await signInToHome(user);
     expect(within(await screen.findByRole('banner')).getByText('2025-26')).toBeInTheDocument();
   });
 
@@ -71,26 +71,25 @@ describe('App start-up and login', () => {
     const address = screen.getByLabelText('Server address');
     await user.clear(address);
     await user.type(address, 'http://192.168.1.10:4100{Enter}');
-    expect(await screen.findByRole('button', { name: 'Sign in' })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: 'Login' })).toBeInTheDocument();
     expect(bridge.config.serverUrl).toBe('http://192.168.1.10:4100');
   });
 
   it('returns to the login screen with a notice when the session ends', async () => {
     const user = userEvent.setup();
     const { api } = renderApp();
-    await signIn(user);
-    await screen.findByRole('banner');
+    await signInToHome(user);
     act(() => api.onUnauthorized?.());
-    expect(await screen.findByRole('button', { name: 'Sign in' })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: 'Login' })).toBeInTheDocument();
     expect(screen.getByText(/session has ended/i)).toBeInTheDocument();
   });
 
-  it('signs out from the top bar', async () => {
+  it('logs out from the top bar', async () => {
     const user = userEvent.setup();
     const { api } = renderApp({ me: ME_CLERK });
-    await signIn(user, 'clerk');
-    await user.click(await screen.findByRole('button', { name: 'Sign out' }));
-    expect(await screen.findByRole('button', { name: 'Sign in' })).toBeInTheDocument();
+    await signInToHome(user, 'clerk');
+    await user.click(await screen.findByRole('button', { name: 'Logout' }));
+    expect(await screen.findByRole('button', { name: 'Login' })).toBeInTheDocument();
     expect(api.calls.some((c) => c.path === '/api/logout')).toBe(true);
   });
 });
@@ -98,43 +97,36 @@ describe('App start-up and login', () => {
 describe('test mode (the server has sign-in switched off)', () => {
   const testModeRoutes = [{ method: 'GET' as const, path: '/api/health', reply: () => ({ ok: true, loginRequired: false }) }];
 
-  it('opens straight into the app, shows a test-mode notice, and has no sign-out button', async () => {
+  it('still opens on the login page first', async () => {
     renderApp({ routes: testModeRoutes });
-    const bar = within(await screen.findByRole('banner'));
-    expect(bar.getByText('Test Textiles')).toBeInTheDocument();
-    expect(bar.getByText(/test mode/i)).toBeInTheDocument();
-    expect(bar.queryByRole('button', { name: 'Sign out' })).toBeNull();
-    expect(screen.queryByRole('button', { name: 'Sign in' })).toBeNull();
+    expect(await screen.findByLabelText('Username')).toBeInTheDocument();
+    expect(screen.queryByRole('banner')).toBeNull();
   });
 
-  it('never calls the login endpoint', async () => {
+  it('never calls the login endpoint when continuing as the administrator', async () => {
+    const user = userEvent.setup();
     const { api } = renderApp({ routes: testModeRoutes });
-    await screen.findByRole('banner');
+    await user.click(await screen.findByRole('button', { name: /continue as administrator/i }));
+    await screen.findByRole('heading', { name: 'Your companies' });
     expect(api.calls.some((c) => c.path === '/api/login')).toBe(false);
   });
 
-  it('falls back to the normal sign-in screen if the server has no test user to offer', async () => {
-    renderApp({
-      routes: [
-        ...testModeRoutes,
-        {
-          method: 'GET',
-          path: '/api/me',
-          reply: () => {
-            throw new ApiError(401, 'NOT_AUTHENTICATED', 'Please log in');
-          },
-        },
-      ],
-    });
-    expect(await screen.findByRole('button', { name: 'Sign in' })).toBeInTheDocument();
+  it('returns to the login page after Logout', async () => {
+    const user = userEvent.setup();
+    renderApp({ routes: testModeRoutes });
+    await user.click(await screen.findByRole('button', { name: /continue as administrator/i }));
+    await screen.findByRole('heading', { name: 'Your companies' });
+    await user.click(screen.getByRole('button', { name: 'Logout' }));
+    expect(await screen.findByLabelText('Username')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /continue as administrator/i })).toBeInTheDocument();
   });
 
-  it('a normal server (login required) still shows no test-mode notice', async () => {
+  it('a normal server (login required) shows no test-mode notice', async () => {
     const user = userEvent.setup();
     renderApp();
-    await signIn(user);
+    await signInToHome(user);
     const bar = within(await screen.findByRole('banner'));
     expect(bar.queryByText(/test mode/i)).toBeNull();
-    expect(bar.getByRole('button', { name: 'Sign out' })).toBeInTheDocument();
+    expect(bar.getByRole('button', { name: 'Logout' })).toBeInTheDocument();
   });
 });

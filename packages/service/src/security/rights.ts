@@ -136,11 +136,14 @@ export async function setHiddenCompanies(db: Db, userId: string, companyIds: str
 export async function visibleCompanies(
   q: Queryable,
   actor: Actor,
-): Promise<{ id: string; code: string; name: string; freezeDate: string | null }[]> {
+): Promise<{ id: string; code: string; name: string; gstin: string | null; freezeDate: string | null; yearCount: number; latestYearStatus: string | null }[]> {
   return q.query(
-    `SELECT id, code, name, freeze_date AS "freezeDate" FROM companies
-     WHERE $1::boolean OR id NOT IN (SELECT company_id FROM user_hidden_companies WHERE user_id = $2)
-     ORDER BY name`,
+    `SELECT c.id, c.code, c.name, c.gstin, c.freeze_date AS "freezeDate",
+            (SELECT COUNT(*) FROM financial_years y WHERE y.company_id = c.id)::int AS "yearCount",
+            (SELECT y.status FROM financial_years y WHERE y.company_id = c.id ORDER BY y.start_date DESC LIMIT 1) AS "latestYearStatus"
+       FROM companies c
+      WHERE $1::boolean OR c.id NOT IN (SELECT company_id FROM user_hidden_companies WHERE user_id = $2)
+      ORDER BY c.name`,
     [actor.isAdmin, actor.userId],
   );
 }

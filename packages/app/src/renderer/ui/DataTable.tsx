@@ -21,11 +21,13 @@ interface Props<T> {
   caption?: string;
   emptyText?: string;
   tableRef?: Ref<HTMLTableElement>;
+  /** The row highlighted when the rows load (default: the first). */
+  initialActive?: number;
 }
 
-export function DataTable<T>({ columns, rows, rowKey, onOpen, footer, caption, emptyText, tableRef }: Props<T>) {
-  const [active, setActive] = useState(0);
-  useEffect(() => setActive(0), [rows]);
+export function DataTable<T>({ columns, rows, rowKey, onOpen, footer, caption, emptyText, tableRef, initialActive = 0 }: Props<T>) {
+  const [active, setActive] = useState(initialActive);
+  useEffect(() => setActive(initialActive), [rows, initialActive]);
 
   function onKeyDown(e: KeyboardEvent<HTMLTableElement>) {
     const last = rows.length - 1;

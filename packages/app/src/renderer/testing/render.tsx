@@ -1,4 +1,5 @@
-import { render, screen } from '@testing-library/react';
+import { expect } from 'vitest';
+import { render, screen, waitFor } from '@testing-library/react';
 import type { UserEvent } from '@testing-library/user-event';
 import type { ReactElement } from 'react';
 import { App } from '../App';
@@ -26,6 +27,17 @@ export async function signIn(user: UserEvent, username = 'boss', password = 'sec
   await user.type(screen.getByLabelText('Password'), `${password}{Enter}`);
 }
 
+/** Log in, then choose the first company and the highlighted year with Enter, landing on Home. */
+export async function signInToHome(user: UserEvent, username = 'boss', password = 'secret') {
+  await signIn(user, username, password);
+  await screen.findByRole('heading', { name: 'Your companies' });
+  await user.keyboard('{Enter}');
+  await screen.findByRole('heading', { name: 'Financial years' });
+  await waitFor(() => expect(screen.getByRole('grid', { name: 'Years' })).toHaveFocus());
+  await user.keyboard('{Enter}');
+  await screen.findByRole('heading', { name: /Welcome/ });
+}
+
 function staticSession(partial: Partial<SessionValue>): SessionValue {
   return {
     actor: ME_ADMIN.actor,
@@ -34,7 +46,12 @@ function staticSession(partial: Partial<SessionValue>): SessionValue {
     company: COMPANY,
     year: YEAR_2026,
     years: [YEAR_2025, YEAR_2026],
+    stage: 'home',
     selectCompany: async () => {},
+    enterCompany: async () => {},
+    openYear: () => {},
+    backToCompanies: () => {},
+    backToYears: () => {},
     selectYear: () => {},
     refreshCompanies: async () => {},
     reloadYears: async () => {},
