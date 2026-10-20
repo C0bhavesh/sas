@@ -1549,7 +1549,7 @@ describe('createBridgeClient', () => {
 
   it('turns an unreachable server into a NETWORK error', async () => {
     const api = createBridgeClient(bridgeReturning({ status: 0, json: { code: 'NETWORK', message: 'Cannot reach the server.' } }));
-    const err = await api.request('GET', '/api/x').catch((e) => e);
+    const err = await api.request<never>('GET', '/api/x').catch((e) => e as ApiError);
     expect(err).toBeInstanceOf(ApiError);
     expect(err.status).toBe(0);
     expect(err.code).toBe('NETWORK');
@@ -1557,7 +1557,7 @@ describe('createBridgeClient', () => {
 
   it('gives a generic message when the error body has none', async () => {
     const api = createBridgeClient(bridgeReturning({ status: 500, json: null }));
-    const err = await api.request('GET', '/api/x').catch((e) => e);
+    const err = await api.request<never>('GET', '/api/x').catch((e) => e as ApiError);
     expect(err.code).toBe('ERROR');
     expect(err.message).toMatch(/500/);
   });
