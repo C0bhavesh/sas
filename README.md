@@ -29,3 +29,20 @@ administrator password (403) and left the audit log matching the restored data.
 ## The desktop app
 
 `packages/app` is the Electron front end. See `packages/app/README.md` for how to run it and the release checklist.
+
+## Try it on your own computer
+
+You need Node 22 or newer (`node -v`). In a normal terminal (PowerShell, Command Prompt or Git Bash), from this folder:
+
+```
+npm install
+npm run demo
+```
+
+That builds the desktop app, starts the service with an embedded database (no PostgreSQL needed), and opens the app.
+Sign in with **username `admin`, password `admin12345`**. Your data is kept in the `.devdata` folder; delete it to start fresh.
+Press **F1** inside the app to see every keyboard shortcut. A suggested first session: create a company, add a few accounts and a
+cash book, then press **F4** to enter receipts and **F8** for the ledger report.
+
+If the window never opens and you see `Cannot read properties of undefined (reading 'setPath')`, your terminal belongs to an
+editor that sets `ELECTRON_RUN_AS_NODE`; `npm run demo` already handles that, but plain `npm run dev:app` does not.

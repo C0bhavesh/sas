@@ -9,7 +9,8 @@
     "test": "vitest run",
     "typecheck": "tsc --noEmit -p packages/shared && tsc --noEmit -p packages/service && tsc --noEmit -p packages/app",
     "start:service": "npm run start -w @sas/service",
-    "dev:app": "npm run dev -w @sas/app"
+    "dev:app": "npm run dev -w @sas/app",
+    "demo": "node scripts/demo.mjs"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",
